@@ -14,8 +14,8 @@ Recently, I started learning the basics of machine learning and wanted to apply 
 
 
 ### Project Goals
-1. By analyzing their discography, I aim to declaire an anomaly in music genre classification or find the genre that best "suits" their style.
-2. his project is not about creating a perfect model but about exploring, making mistakes, and improving along the way.
+1. By analyzing their discography, I aim to declare an anomaly in music genre classification or find the genre that best "suits" their style.
+2. This project is not about creating a perfect model but about exploring, making mistakes, and improving along the way.
 
 **Important Note**   
 The classification of music genres is subjective! There are no strict rules that define clear borders between two pieces of music from different genres. However, we have some basic divisions created by fans and listeners, such as rock, metal, hip hop, rap, etc.   
