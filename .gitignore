@@ -1,5 +1,6 @@
 # Ignore the virtual_env directory
 virtual_env/
+music_data/
 
 # Other common ignores
 *.pyc
