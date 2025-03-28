@@ -2,28 +2,30 @@ import math
 import os
 import librosa
 import json
+import numpy as np
 
 DATASET_PATH = "music_data/src/"
-JSON_PATH = "music_data/primus_data.json"
+JSON_PATH = "computed_data/primus_data_mean.json"
 SAMPLE_RATE = 25050
 
-def save_mfcc(dataset_path, json_path, n_mfcc=40, n_fft=2048, hop_length=512, segment_duration=15):
+def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15, take_mean=False):
     print("Execution of save_mfcc function has started.\n")
-    data = {
-        "mapping": [],
-        "mfcc": [],
-        "labels": []
-    }
+    # data will be a dictionary with genres as keys.
+    data = {}
+    
     # Traverse through all subdirectories (each representing a genre)
     for i, (dirpath, dirnames, filenames) in enumerate(os.walk(dataset_path)):
         # Skip the root folder; process only subdirectories
         if dirpath != dataset_path:
-            # Extract the genre (semantic label) from the directory name
-            semantic_label = os.path.basename(dirpath)
-            data["mapping"].append(semantic_label)
-            print(f"Processing {semantic_label}\n")
+            # Extract the genre from the directory name
+            genre = os.path.basename(dirpath)
+            print(f"Processing {genre}\n")
             
-            # Process all files in the genre folder
+            # Initialize the genre entry if not already present
+            if genre not in data:
+                data[genre] = {}
+            
+            # Process all files (songs) in the folder
             for f in filenames:
                 file_path = os.path.join(dirpath, f)
                 signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
@@ -33,39 +35,39 @@ def save_mfcc(dataset_path, json_path, n_mfcc=40, n_fft=2048, hop_length=512, se
                     print(f"File {file_path} is too short, skipping.")
                     continue
 
-                track_duration = librosa.get_duration(y=signal, sr=sr)
-                num_segments = math.floor(track_duration / segment_duration)
-                if num_segments == 0:
-                    num_segments = 1  # Ensure at least one segment
+                segment_samples = int(sr * segment_duration)
+                segments = [signal[i:i + segment_samples] for i in range(0, len(signal), segment_samples)]
                 
-                # Calculate the number of samples per segment
-                num_samples_per_segment = int(len(signal) / num_segments)
-                expected_num_mfcc_vectors_per_segment = math.ceil(num_samples_per_segment / hop_length)
-
+                # Create a dictionary to hold segments for this song
+                song_data = {}
+                
                 # Process segments extracting MFCCs
-                for s in range(num_segments):
-                    start_sample = s * num_samples_per_segment
-                    finish_sample = start_sample + num_samples_per_segment
-                    segment = signal[start_sample:finish_sample]
-                    
-                    if len(segment) < n_fft:
-                        print(f"Segment {s} in file {file_path} is too short for n_fft, skipping.")
+                for seg_idx, segment in enumerate(segments):
+                    # Process only segments that are exactly segment_duration long
+                    if len(segment) != segment_samples:
+                        print(f"Segment {seg_idx} in file {file_path} is not exactly {segment_duration} seconds, skipping.")
                         continue
                     
                     mfcc = librosa.feature.mfcc(y=segment,
                                                 sr=sr,
-                                                n_fft=n_fft,
                                                 n_mfcc=n_mfcc,
+                                                n_fft=n_fft,
                                                 hop_length=hop_length)
                     
-                    # Check if MFCC extraction resulted in the expected number of vectors (time frames)
-                    if mfcc.shape[1] == expected_num_mfcc_vectors_per_segment:
-                        data["mfcc"].append(mfcc.tolist())
-                        # Use (i - 1) since the first directory (i==0) was the root; adjust if needed.
-                        data["labels"].append(f)
+                    if(take_mean):
+                        # Aggregate MFCCs by taking the mean across time frames, yielding a 13-dimensional vector
+                        mfcc = np.mean(mfcc, axis=1)
+                    
+                    # Save MFCCs for this segment using the segment index as key
+                    song_data[str(seg_idx)] = mfcc.tolist()
+                
+                # Under the current genre, use song data using the song filename as the key
+                data[genre][f] = song_data
+
+    # Write the restructured data into the JSON file
     with open(json_path, "w") as fp:
         json.dump(data, fp, indent=4)
     print("The end of the execution.\n")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15)
+    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15, take_mean=1)
