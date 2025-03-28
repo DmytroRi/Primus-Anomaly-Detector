@@ -2,12 +2,13 @@ import math
 import os
 import librosa
 import json
+import numpy as np
 
 DATASET_PATH = "music_data/src/"
-JSON_PATH = "computed_data/primus_data.json"
+JSON_PATH = "computed_data/primus_data_mean.json"
 SAMPLE_RATE = 25050
 
-def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15):
+def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15, take_mean=False):
     print("Execution of save_mfcc function has started.\n")
     # data will be a dictionary with genres as keys.
     data = {}
@@ -53,10 +54,14 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
                                                 n_fft=n_fft,
                                                 hop_length=hop_length)
                     
-                    # Save MFCCs for the segment using the segment index as key
+                    if(take_mean):
+                        # Aggregate MFCCs by taking the mean across time frames, yielding a 13-dimensional vector
+                        mfcc = np.mean(mfcc, axis=1)
+                    
+                    # Save MFCCs for this segment using the segment index as key
                     song_data[str(seg_idx)] = mfcc.tolist()
                 
-                # Under the current genre, use the song filename as the key
+                # Under the current genre, use song data using the song filename as the key
                 data[genre][f] = song_data
 
     # Write the restructured data into the JSON file
@@ -65,4 +70,4 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
     print("The end of the execution.\n")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15)
+    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15, take_mean=1)
