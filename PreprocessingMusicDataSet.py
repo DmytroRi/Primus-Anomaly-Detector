@@ -14,8 +14,8 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
     data = {}
 
     # Variables to store information about the process
-    TOTAL_LENGTH = 0
-    NUM_OF_SEGMENTS = 0
+    total_duration = 0
+    num_of_segments = 0
 
     # Traverse through all subdirectories (each representing a genre)
     for i, (dirpath, dirnames, filenames) in enumerate(os.walk(dataset_path)):
@@ -46,15 +46,15 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
                 song_data = {}
                 
                 # Update state
-                TOTAL_LENGTH += librosa.get_duration(y=signal, sr=sr)
-                NUM_OF_SEGMENTS += len(segments)
+                total_duration += librosa.get_duration(y=signal, sr=sr)
+                num_of_segments += len(segments)
 
                 # Process segments extracting MFCCs
                 for seg_idx, segment in enumerate(segments):
                     # Process only segments that are exactly segment_duration long
                     if len(segment) != segment_samples:
                         print(f"Segment {seg_idx} in file {file_path} is not exactly {segment_duration} seconds, skipping.")
-                        NUM_OF_SEGMENTS -= 1
+                        num_of_segments -= 1
                         continue
                     
                     mfcc = librosa.feature.mfcc(y=segment,
@@ -80,9 +80,9 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
 
     # Information about execution 
     print("-------------------------------------------")
-    print(f"Total duration of tracks: {TOTAL_LENGTH} seconds.\nTotal amount of segments: {NUM_OF_SEGMENTS}.\nSegments duration: {segment_duration} seconds.")
-    print(f"Total effective duration: {segment_duration*NUM_OF_SEGMENTS} seconds.\nRetention rate: {100*segment_duration*NUM_OF_SEGMENTS/TOTAL_LENGTH}%.")
+    print(f"Total duration of tracks: {total_duration} seconds.\nTotal amount of segments: {num_of_segments}.\nSegments duration: {segment_duration} seconds.")
+    print(f"Total effective duration: {segment_duration*num_of_segments} seconds.\nRetention rate: {100*segment_duration*num_of_segments/total_duration}%.")
     print("-------------------------------------------")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15, take_mean=1)
+    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15, take_mean=True)
