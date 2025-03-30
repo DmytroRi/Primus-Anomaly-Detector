@@ -26,6 +26,7 @@ Tornado of Souls
 Rust In Peace...Polaris
 Psychotron
 The Killing Road
+Victory
 
 --Slayer--
 Chemical Warfare
@@ -49,11 +50,14 @@ Indians
 Feel the Fire
 Rotten to the Core
 Elimination
+Frankenstein
+Blood Money
 
 --Testament--
 Over the Wall
 Practice What You Preach
 Souls of Black
+The Haunting
 
 --Exodus--
 Bonded by Blood
@@ -68,3 +72,9 @@ Mistress of Pain
 Pleasure to Kill
 Flag of Hate
 People of the Lie
+
+--Annihilator--
+The Fun Place
+Road to Ruin
+Stonewall
+Phantasmagoria
