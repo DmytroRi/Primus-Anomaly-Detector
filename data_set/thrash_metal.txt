@@ -1,29 +1,48 @@
 --Metallica--
 Hit the Lights
 Whiplash
+Motorbreath
+Seek and Destroy
+Ride The Lightning
 Creeping Death
 Master of Puppets
 Battery
+Blackened
+...And Justice for all
+Eye of the Beholder
 One
+The Shortest Straw
+Harvester of Sorrow
 
 --Megadeth--
+Killing Is My Business...And Business Is Good!
+Looking down the Cross
 Peace Sells 
 Wake Up Dead
 In My Darkest Hour
 Holy Wars… The Punishment Due
 Hangar 18
 Tornado of Souls
+Rust In Peace...Polaris
+Psychotron
+The Killing Road
+Victory
 
 --Slayer--
 Chemical Warfare
 Angel of Death
 Raining Blood
+Agressive Perfector
 South of Heaven
 War Ensemble
+Seasons In The Abyss
 
 --Anthrax--
 Madhouse
 A.I.R.
+The Enemy
+Among the Living
+I Am The Law
 Caught in a Mosh
 Indians
 
@@ -31,11 +50,14 @@ Indians
 Feel the Fire
 Rotten to the Core
 Elimination
+Frankenstein
+Blood Money
 
 --Testament--
 Over the Wall
 Practice What You Preach
 Souls of Black
+The Haunting
 
 --Exodus--
 Bonded by Blood
@@ -50,3 +72,9 @@ Mistress of Pain
 Pleasure to Kill
 Flag of Hate
 People of the Lie
+
+--Annihilator--
+The Fun Place
+Road to Ruin
+Stonewall
+Phantasmagoria
