@@ -3,7 +3,7 @@ Primus
 Total duration of tracks: 16156.438922155687 seconds.
 Total amount of segments: 3209.
 Segments duration: 5 seconds.
-Total effective duration: 16045 seconds. (4 hours, 27 minutes and 25 Seconds)
+Total effective duration: 16045 seconds. (4 hours, 27 minutes and 25 seconds)
 Retention rate: 99.31025071370853%.
 -------------------------------------------
 
@@ -12,6 +12,15 @@ Classic heavy metal
 Total duration of tracks: 20145.411217564873 seconds.
 Total amount of segments: 3997.
 Segments duration: 5 seconds.
-Total effective duration: 19985 seconds. (5 hours, 33 minutes and 5 Seconds)
+Total effective duration: 19985 seconds. (5 hours, 33 minutes and 5 seconds)
 Retention rate: 99.2037332182874%.
+-------------------------------------------
+
+-------------------------------------------
+Thrash metal
+Total duration of tracks: 18204.043393213575 seconds.
+Total amount of segments: 3613.
+Segments duration: 5 seconds.
+Total effective duration: 18065 seconds. (5 hours, 1 minute and 5 seconds)
+Retention rate: 99.23619500233993%.
 -------------------------------------------
