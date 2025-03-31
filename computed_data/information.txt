@@ -24,3 +24,12 @@ Segments duration: 5 seconds.
 Total effective duration: 18065 seconds. (5 hours, 1 minute and 5 seconds)
 Retention rate: 99.23619500233993%.
 -------------------------------------------
+
+-------------------------------------------
+Alternative metal
+Total duration of tracks: 11398.525588822351 seconds.
+Total amount of segments: 2258.
+Segments duration: 5 seconds.
+Total effective duration: 11290 seconds. (3 hours, 8 minute and 10 seconds)
+Retention rate: 99.04789801122372%.
+-------------------------------------------
