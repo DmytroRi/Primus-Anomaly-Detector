@@ -27,9 +27,9 @@ Retention rate: 99.23619500233993%.
 
 -------------------------------------------
 Alternative metal
-Total duration of tracks: 11398.525588822351 seconds.
-Total amount of segments: 2258.
+Total duration of tracks: 17384.662195608784 seconds.
+Total amount of segments: 3442.
 Segments duration: 5 seconds.
-Total effective duration: 11290 seconds. (3 hours, 8 minute and 10 seconds)
-Retention rate: 99.04789801122372%.
+Total effective duration: 17210 seconds. (4 Hours, 46 minutes and 50 seconds)
+Retention rate: 98.99530865976273%.
 -------------------------------------------
