@@ -30,6 +30,15 @@ Alternative metal
 Total duration of tracks: 17384.662195608784 seconds.
 Total amount of segments: 3442.
 Segments duration: 5 seconds.
-Total effective duration: 17210 seconds. (4 Hours, 46 minutes and 50 seconds)
+Total effective duration: 17210 seconds. (4 hours, 46 minutes and 50 seconds)
 Retention rate: 98.99530865976273%.
+-------------------------------------------
+
+-------------------------------------------
+Death metal
+Total duration of tracks: 17404.997125748505 seconds.
+Total amount of segments: 3448.
+Segments duration: 5 seconds.
+Total effective duration: 17240 seconds. (4 hours, 47 minutes and 20 seconds)
+Retention rate: 99.05201291010607%.
 -------------------------------------------
