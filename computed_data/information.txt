@@ -42,3 +42,12 @@ Segments duration: 5 seconds.
 Total effective duration: 17240 seconds. (4 hours, 47 minutes and 20 seconds)
 Retention rate: 99.05201291010607%.
 -------------------------------------------
+
+-------------------------------------------
+Black metal
+Total duration of tracks: 22927.8055489022 seconds.
+Total amount of segments: 4555.
+Segments duration: 5 seconds.
+Total effective duration: 22775 seconds. (6 hours, 19 minutes and 35 seconds)
+Retention rate: 99.33353609190253%.
+-------------------------------------------
