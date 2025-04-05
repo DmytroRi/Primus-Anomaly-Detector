@@ -51,3 +51,12 @@ Segments duration: 5 seconds.
 Total effective duration: 22775 seconds. (6 hours, 19 minutes and 35 seconds)
 Retention rate: 99.33353609190253%.
 -------------------------------------------
+
+-------------------------------------------
+Nu metal
+Total duration of tracks: 14985.03704590818 seconds.
+Total amount of segments: 2970.
+Segments duration: 5 seconds.
+Total effective duration: 14850 seconds. (4 hours, 7 minutes and 30 seconds)
+Retention rate: 99.09885410697031%.
+-------------------------------------------
