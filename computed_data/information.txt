@@ -60,3 +60,12 @@ Segments duration: 5 seconds.
 Total effective duration: 14850 seconds. (4 hours, 7 minutes and 30 seconds)
 Retention rate: 99.09885410697031%.
 -------------------------------------------
+
+-------------------------------------------
+Hard rock
+Total duration of tracks: 17504.75732534931 seconds.
+Total amount of segments: 3473.
+Segments duration: 5 seconds.
+Total effective duration: 17365 seconds. (4 hours, 49 minutes and 25 seconds)
+Retention rate: 99.20160375404393%.
+-------------------------------------------
