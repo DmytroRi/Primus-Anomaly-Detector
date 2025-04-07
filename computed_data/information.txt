@@ -1,4 +1,13 @@
 -------------------------------------------
+TOTAL
+Total duration of tracks: 145912.75277445107 seconds.
+Total amount of segments: 28945.
+Segments duration: 5 seconds.
+Total effective duration: 144725 seconds. (40 hours, 12 minutes and 05 seconds)
+Retention rate: 99.1859842598631%.
+-------------------------------------------
+
+-------------------------------------------
 Primus
 Total duration of tracks: 16156.438922155687 seconds.
 Total amount of segments: 3209.
