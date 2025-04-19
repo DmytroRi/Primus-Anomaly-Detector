@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <nlohmann\json.hpp>
 
 #include "c_KMeans.h"
 #include "constants.h"
@@ -29,6 +28,7 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"The dataset upload was failed. Termination of program.\n";
 	}
 
+	m_vecDataSet;
 }
 
 bool c_KMeans::bReadData()
@@ -50,11 +50,12 @@ bool c_KMeans::bReadData()
 		for (auto const & [songName, segmentsObj] : songsObj.items())
 		{
 			s_Song sSong;
+			sSong.eGenre = eStrGenreToEnum(genreName);
 			sSong.strName = songName;
 
 			for (auto const& [segKey, mfccArr] : segmentsObj.items())
 			{
-                if (!mfccArr.is_array() || mfccArr.size() != 13)
+                if (!mfccArr.is_array() || mfccArr.size() != NUM_OF_MFCCS)
 				{
 					std::cout << "Expected 13-element array for " << genreName << "/" << songName << "/" << segKey;
 					return false;
@@ -94,4 +95,43 @@ bool c_KMeans::bCalculateCenters()
 bool c_KMeans::bWriteData()
 {
 	return false;
+}
+
+std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
+{
+	switch (eGenre)
+	{
+	case e_Genres::ALTERNATIVE_METAL:	return "Alternative metal";
+	case e_Genres::BLACK_METAL:			return "Black metal";
+	case e_Genres::DEATH_METAL:			return "Death metal";
+	case e_Genres::CLASSIC_HEAVY_METAL:	return "Classic heavy metal";
+	case e_Genres::HARD_ROCK:			return "Hard rock";
+	case e_Genres::NU_METAL:			return "Nu metal";
+	case e_Genres::THRASH_METAL:		return "Thrash metal";
+	case e_Genres::PRIMUS:				return "Primus";
+
+	default:							return "Undefined";
+	}
+}
+
+e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
+{
+	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
+		return e_Genres::ALTERNATIVE_METAL;
+	else if(sGenre == "Black metal" || sGenre == "black_metal")
+		return e_Genres::BLACK_METAL;
+	else if(sGenre == "Death metal" || sGenre == "death_metal")
+		return e_Genres::DEATH_METAL;
+	else if(sGenre == "Classic heavy metal" || sGenre == "classic_heavy_metal")
+		return e_Genres::CLASSIC_HEAVY_METAL;
+	else if(sGenre == "Hard rock" || sGenre == "hard_rock")
+		return e_Genres::HARD_ROCK;
+	else if(sGenre == "Nu metal" || sGenre == "nu_metal")
+		return e_Genres::NU_METAL;
+	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
+		return e_Genres::THRASH_METAL;
+	else if(sGenre == "Primus metal" || sGenre == "primus_metal")
+		return e_Genres::PRIMUS;
+	else
+		return e_Genres::UNDEFINED;
 }

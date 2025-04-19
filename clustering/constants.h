@@ -1,5 +1,8 @@
 #pragma once
 #include <vector>
+#include <string>
+#include <nlohmann\json.hpp>
+
 
 using json = nlohmann::json;
 
@@ -12,11 +15,13 @@ enum class e_Genres
 	ALTERNATIVE_METAL	= 0,
 	BLACK_METAL			= 1,
 	DEATH_METAL			= 2,
-	HEAVY_METAL			= 3,
+	CLASSIC_HEAVY_METAL	= 3,
 	HARD_ROCK			= 4,
 	NU_METAL			= 5,
 	THRASH_METAL		= 6,
 	PRIMUS				= 7,
+
+	UNDEFINED			= 255,
 };
 
 // Songs information
