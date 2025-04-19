@@ -1,4 +1,5 @@
 #pragma once
+#include "constants.h"
 
 // Implementation of K-means clustering from scratch 
 class c_KMeans
@@ -17,7 +18,8 @@ private:
 	bool		bWriteData();
 	
 
-	bool		m_bTerminated{};
-	int			m_i4ClusterNumber{};
+	bool					m_bTerminated{};
+	int						m_i4ClusterNumber{};
+	std::vector<s_Song>		m_vecDataSet{};
 };
 
