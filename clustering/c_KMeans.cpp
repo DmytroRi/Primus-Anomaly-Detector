@@ -90,15 +90,7 @@ bool c_KMeans::bInitCentroids()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
-	{
-		for (int d {0}; d < NUM_OF_MFCCS; ++d)
-		{
-        std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-        m_aCentroids[c][d] = dist(gen);
-		}
-	}
-
+#ifdef D2_SAMPLING	// intialization using k-means++
 	// Flatten all segments into one array
 	std::vector<std::array<double, NUM_OF_MFCCS>> vecAllSegments{};
 	vecAllSegments.reserve(
@@ -135,7 +127,16 @@ bool c_KMeans::bInitCentroids()
 				vecMinDist2[i] = d2;
         }
     }
-
+#else	// random initialization
+	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
+	{
+		for (int d {0}; d < NUM_OF_MFCCS; ++d)
+		{
+        std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
+        m_aCentroids[c][d] = dist(gen);
+		}
+	}
+#endif	//D2_SAMPLING
 
 	return true;
 }
