@@ -17,12 +17,22 @@ private:
 	bool			bCalculateCenters();
 	bool			bWriteData();
 
+	void			FindMFCCsBounds();
+
 	std::string		sEnumGenreToStr(const e_Genres & eGenre) const;
 	e_Genres		eStrGenreToEnum(const std::string & sGenre) const;
+
+	double			f8CalculateSqurEuclideanDistance(const std::array<double, NUM_OF_MFCCS>& a,
+													 const std::array<double, NUM_OF_MFCCS>& b) const;
 	
 
-	bool					m_bTerminated{};
-	int						m_i4ClusterNumber{};
-	std::vector<s_Song>		m_vecDataSet{};
+	bool								m_bTerminated{};
+	int									m_i4ClusterNumber{};
+	std::vector<s_Song>					m_vecDataSet{};
+	std::array<double, NUM_OF_MFCCS>	m_aMaxMFCC{};
+	std::array<double, NUM_OF_MFCCS>	m_aMinMFCC{};
+
+
+	std::array<std::array<double, NUM_OF_MFCCS>,NUM_OF_CLUSTERS>	m_aCentroids{};
 };
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <random>
 
 #include "c_KMeans.h"
 #include "constants.h"
@@ -8,7 +9,8 @@ c_KMeans::c_KMeans()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
 {
-	
+	m_aMaxMFCC.fill(std::numeric_limits<double>::infinity());
+	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
 }
 
 c_KMeans::~c_KMeans()
@@ -28,7 +30,13 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"The dataset upload was failed. Termination of program.\n";
 	}
 
-	m_vecDataSet;
+	if(bInitCentroids())
+		std::cout<<"The starting centroids were initialized.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Failed in initializing the starting centroids. Termination of program.\n";
+	}
 }
 
 bool c_KMeans::bReadData()
@@ -62,7 +70,7 @@ bool c_KMeans::bReadData()
 				}
 
 				std::array<double,NUM_OF_MFCCS> mfcc;
-				for (size_t i {0}; i < NUM_OF_MFCCS; i++)
+				for (int i {0}; i < NUM_OF_MFCCS; i++)
                     mfcc[i] = mfccArr[i].get<double>();
 
 				sSong.vecSegments.push_back(mfcc);
@@ -72,14 +80,65 @@ bool c_KMeans::bReadData()
 		}
 	}
 
-	std::cout << "Loaded " << m_vecDataSet.size() << " songs\n";
+	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
 
 	return true;
 }
 
 bool c_KMeans::bInitCentroids()
 {
-	return false;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+#ifdef D2_SAMPLING	// intialization using k-means++
+	// Flatten all segments into one array
+	std::vector<std::array<double, NUM_OF_MFCCS>> vecAllSegments{};
+	vecAllSegments.reserve(
+		std::accumulate(m_vecDataSet.begin(), m_vecDataSet.end(), size_t{0},
+        [](size_t acc, auto const& s){ return acc + s.vecSegments.size(); })
+	);
+	for (auto const& song : m_vecDataSet)
+	{
+		for (auto const& mfcc : song.vecSegments)
+		{
+			vecAllSegments.push_back(mfcc);
+		}
+    }
+
+	// Pick the first centroid randomly
+	std::uniform_int_distribution<size_t> pick(0, vecAllSegments.size() - 1);
+	m_aCentroids[0] = vecAllSegments[pick(gen)];
+
+	std::vector<double> vecMinDist2(vecAllSegments.size());
+	for (int i {0}; i < vecAllSegments.size(); i++)
+		vecMinDist2[i] = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[0]);
+
+	for (int k {1}; k < NUM_OF_CLUSTERS; ++k)
+	{
+        std::discrete_distribution<size_t> dist(vecMinDist2.begin(), vecMinDist2.end());
+        size_t idx = dist(gen);
+        m_aCentroids[k] = vecAllSegments[idx];
+
+        // update minDist2
+        for (size_t i = 0; i < vecAllSegments.size(); ++i)
+		{
+			double d2 = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);
+			if (d2 < vecMinDist2[i])
+				vecMinDist2[i] = d2;
+        }
+    }
+#else	// random initialization
+	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
+	{
+		for (int d {0}; d < NUM_OF_MFCCS; ++d)
+		{
+        std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
+        m_aCentroids[c][d] = dist(gen);
+		}
+	}
+#endif	//D2_SAMPLING
+
+	return true;
 }
 
 bool c_KMeans::bAssignItems()
@@ -95,6 +154,22 @@ bool c_KMeans::bCalculateCenters()
 bool c_KMeans::bWriteData()
 {
 	return false;
+}
+
+void c_KMeans::FindMFCCsBounds()
+{
+	// This function iterates through the data set to find the biggest and the lowest value of each MFCC
+	for (auto const & song : m_vecDataSet)
+	{
+		for (auto const & mfcc : song.vecSegments)
+		{
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+			{
+				m_aMaxMFCC[i] = std::max(m_aMaxMFCC[i], mfcc[i]);
+				m_aMinMFCC[i] = std::min(m_aMinMFCC[i], mfcc[i]);
+			}
+		}
+	}
 }
 
 std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
@@ -134,4 +209,15 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::PRIMUS;
 	else
 		return e_Genres::UNDEFINED;
+}
+
+double c_KMeans::f8CalculateSqurEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b) const
+{
+	double f8Sum{0};
+	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	{
+		double dist {a[i]-b[i]};
+		f8Sum += dist*dist;
+	}
+	return f8Sum;
 }
