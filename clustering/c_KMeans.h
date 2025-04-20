@@ -21,6 +21,9 @@ private:
 
 	std::string		sEnumGenreToStr(const e_Genres & eGenre) const;
 	e_Genres		eStrGenreToEnum(const std::string & sGenre) const;
+
+	double			f8CalculateSqurEuclideanDistance(const std::array<double, NUM_OF_MFCCS>& a,
+													 const std::array<double, NUM_OF_MFCCS>& b) const;
 	
 
 	bool								m_bTerminated{};
