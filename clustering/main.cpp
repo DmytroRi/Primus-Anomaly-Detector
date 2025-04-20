@@ -22,7 +22,7 @@ struct					s
 class					c
 
 std::string				str
-
+std::array				a
 std::vector				vec
 */
 

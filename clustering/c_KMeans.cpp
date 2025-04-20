@@ -8,7 +8,8 @@ c_KMeans::c_KMeans()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
 {
-	
+	m_aMaxMFCC.fill(std::numeric_limits<double>::infinity());
+	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
 }
 
 c_KMeans::~c_KMeans()
@@ -62,7 +63,7 @@ bool c_KMeans::bReadData()
 				}
 
 				std::array<double,NUM_OF_MFCCS> mfcc;
-				for (size_t i {0}; i < NUM_OF_MFCCS; i++)
+				for (int i {0}; i < NUM_OF_MFCCS; i++)
                     mfcc[i] = mfccArr[i].get<double>();
 
 				sSong.vecSegments.push_back(mfcc);
@@ -95,6 +96,23 @@ bool c_KMeans::bCalculateCenters()
 bool c_KMeans::bWriteData()
 {
 	return false;
+}
+
+void c_KMeans::FindMFCCsBounds()
+{
+	// This function iterates through the data set to find the biggest and the lowest value of each MFCC
+	for (auto const & song : m_vecDataSet)
+	{
+		for (auto const & mfcc : song.vecSegments)
+		{
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+			{
+				m_aMaxMFCC[i] = std::max(m_aMaxMFCC[i], mfcc[i]);
+				m_aMinMFCC[i] = std::min(m_aMinMFCC[i], mfcc[i]);
+
+			}
+		}
+	}
 }
 
 std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
