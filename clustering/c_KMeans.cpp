@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <random>
 
 #include "c_KMeans.h"
 #include "constants.h"
@@ -29,7 +30,13 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"The dataset upload was failed. Termination of program.\n";
 	}
 
-	m_vecDataSet;
+	if(bInitCentroids())
+		std::cout<<"The starting centroids were initialized.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Failed in initializing the starting centroids. Termination of program.\n";
+	}
 }
 
 bool c_KMeans::bReadData()
@@ -73,14 +80,26 @@ bool c_KMeans::bReadData()
 		}
 	}
 
-	std::cout << "Loaded " << m_vecDataSet.size() << " songs\n";
+	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
 
 	return true;
 }
 
 bool c_KMeans::bInitCentroids()
 {
-	return false;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
+	{
+		for (int d {0}; d < NUM_OF_MFCCS; ++d)
+		{
+        std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
+        m_aCentroids[c][d] = dist(gen);
+		}
+	}
+
+	return true;
 }
 
 bool c_KMeans::bAssignItems()
@@ -109,7 +128,6 @@ void c_KMeans::FindMFCCsBounds()
 			{
 				m_aMaxMFCC[i] = std::max(m_aMaxMFCC[i], mfcc[i]);
 				m_aMinMFCC[i] = std::min(m_aMinMFCC[i], mfcc[i]);
-
 			}
 		}
 	}

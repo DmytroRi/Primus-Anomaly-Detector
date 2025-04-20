@@ -28,5 +28,8 @@ private:
 	std::vector<s_Song>					m_vecDataSet{};
 	std::array<double, NUM_OF_MFCCS>	m_aMaxMFCC{};
 	std::array<double, NUM_OF_MFCCS>	m_aMinMFCC{};
+
+
+	std::array<std::array<double, NUM_OF_MFCCS>,NUM_OF_CLUSTERS>	m_aCentroids{};
 };
 
