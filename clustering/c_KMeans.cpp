@@ -174,7 +174,7 @@ bool c_KMeans::bAssignItems()
 		}
 
 		// Find the index of the vectors mode 
-		int i4Assign{std::distance(aCenroidsCounts.begin(), 
+		auto i4Assign{std::distance(aCenroidsCounts.begin(), 
 								   std::max_element(aCenroidsCounts.begin(), aCenroidsCounts.end()))};
 
 		if (song.i4Centroid == i4Assign)
@@ -182,7 +182,7 @@ bool c_KMeans::bAssignItems()
 			song.bWasChanged = false;
 			continue;
 		}
-		song.i4Centroid = i4Assign;
+		song.i4Centroid = static_cast<int>(i4Assign);
 		song.bWasChanged = true;
 	}
 	return true;
