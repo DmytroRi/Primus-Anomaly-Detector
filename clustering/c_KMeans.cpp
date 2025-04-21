@@ -60,6 +60,8 @@ bool c_KMeans::bReadData()
 			s_Song sSong;
 			sSong.eGenre = eStrGenreToEnum(genreName);
 			sSong.strName = songName;
+			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
+			sSong.bWasChanged = false;
 
 			for (auto const& [segKey, mfccArr] : segmentsObj.items())
 			{
