@@ -119,7 +119,7 @@ bool c_KMeans::bInitCentroids()
         size_t idx = dist(gen);
         m_aCentroids[k] = vecAllSegments[idx];
 
-        // update minDist2
+        // Update minDist2
         for (size_t i = 0; i < vecAllSegments.size(); ++i)
 		{
 			double d2 = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);

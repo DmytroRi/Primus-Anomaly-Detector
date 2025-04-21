@@ -1,0 +1,3 @@
+StatQuest: K-means clustering - https://youtu.be/4b5d3muPQmA?si=ksJL-iRkadbJaOzh
+Machine Learning Tutorial Python - 13: K Means Clustering Algorithm - https://www.youtube.com/watch?v=EItlUEPCIzM&t=257s
+k-means++ - https://en.wikipedia.org/wiki/K-means%2B%2B?utm_source=chatgpt.com
