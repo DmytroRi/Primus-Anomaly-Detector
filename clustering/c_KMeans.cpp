@@ -155,18 +155,27 @@ bool c_KMeans::bAssignItems()
 {
 	for (auto & song : m_vecDataSet)
 	{
-		std::vector<int> vecCentroids{};
-		vecCentroids.reserve(song.vecSegments.size());
+		if (song.vecSegments.empty()) continue;
+		std::array<int, NUM_OF_CLUSTERS> aCenroidsCounts{};
 		for (auto const & mfcc : song.vecSegments)
 		{
-			std::array<double,NUM_OF_CLUSTERS> aDistance{};
+			double f8BestDistance{std::numeric_limits<double>::infinity()};
+			int i4BestDistPlace{0};
 			for (int i{ 0 }; i < NUM_OF_CLUSTERS; i++)
-				aDistance[i] = f8CalculateEuclideanDistance(mfcc, m_aCentroids[i]);
-			auto min = std::min_element(aDistance.begin(), aDistance.end());
-			vecCentroids.push_back(static_cast<int>(std::distance(aDistance.begin(), min)));
-			
+			{
+				double f8Distance {f8CalculateEuclideanDistance(mfcc, m_aCentroids[i])};
+				if (f8Distance < f8BestDistance)
+				{
+					f8BestDistance = f8Distance;
+					i4BestDistPlace = i;
+				}
+			}
+			aCenroidsCounts[i4BestDistPlace]++;
 		}
-		int i4Assign{i4FindMode(vecCentroids)};
+
+		// Find the index of the vectors mode 
+		int i4Assign{std::distance(aCenroidsCounts.begin(), 
+								   std::max_element(aCenroidsCounts.begin(), aCenroidsCounts.end()))};
 
 		if (song.i4Centroid == i4Assign)
 		{
@@ -264,21 +273,4 @@ double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MF
 		f8Sum += dist*dist;
 	}
 	return sqrt(f8Sum);
-}
-
-int c_KMeans::i4FindMode(const std::vector<int> & vec) const
-{
-	std::array<int, NUM_OF_CLUSTERS> aCentroidsCount{0};
-	for(auto const & centroid : vec)
-		aCentroidsCount[centroid]++;
-
-	int i4MostCommonValue = 0;
-    int i4HighestCount = 0;
-	for (int i {0}; i < NUM_OF_CLUSTERS; ++i) {
-        if (aCentroidsCount[i] > i4HighestCount) {
-            i4HighestCount = aCentroidsCount[i];
-            i4MostCommonValue = i;
-        }
-    }
-	return i4MostCommonValue;
 }
