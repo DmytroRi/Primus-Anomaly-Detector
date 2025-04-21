@@ -27,8 +27,6 @@ private:
 	double			f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS>& a,
 												 const std::array<double, NUM_OF_MFCCS>& b) const;
 
-	int				i4FindMode(const std::vector<int>& vec) const;
-
 	bool								m_bTerminated{};
 	int									m_i4ClusterNumber{};
 	std::vector<s_Song>					m_vecDataSet{};
