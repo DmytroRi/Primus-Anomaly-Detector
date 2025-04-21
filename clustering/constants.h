@@ -31,4 +31,6 @@ struct s_Song
 	e_Genres												eGenre;
 	std::string												strName;
 	std::vector<std::array<double,NUM_OF_MFCCS>>			vecSegments;
+	int														i4Centroid;
+	bool													bWasChanged;
 };

@@ -30,12 +30,20 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"The dataset upload was failed. Termination of program.\n";
 	}
 
-	if(bInitCentroids())
+	if(bInitCentroids() && !m_bTerminated)
 		std::cout<<"The starting centroids were initialized.\n";
 	else
 	{
 		m_bTerminated = true;
 		std::cout<<"Failed in initializing the starting centroids. Termination of program.\n";
+	}
+
+	if(bAssignItems() && !m_bTerminated)
+		std::cout<<"Songs were assigned.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Assignment failed. Termination of program.\n";
 	}
 }
 
@@ -60,6 +68,8 @@ bool c_KMeans::bReadData()
 			s_Song sSong;
 			sSong.eGenre = eStrGenreToEnum(genreName);
 			sSong.strName = songName;
+			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
+			sSong.bWasChanged = false;
 
 			for (auto const& [segKey, mfccArr] : segmentsObj.items())
 			{
@@ -119,7 +129,7 @@ bool c_KMeans::bInitCentroids()
         size_t idx = dist(gen);
         m_aCentroids[k] = vecAllSegments[idx];
 
-        // update minDist2
+        // Update minDist2
         for (size_t i = 0; i < vecAllSegments.size(); ++i)
 		{
 			double d2 = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);
@@ -143,7 +153,30 @@ bool c_KMeans::bInitCentroids()
 
 bool c_KMeans::bAssignItems()
 {
-	return false;
+	for (auto & song : m_vecDataSet)
+	{
+		std::vector<int> vecCentroids{};
+		vecCentroids.reserve(song.vecSegments.size());
+		for (auto const & mfcc : song.vecSegments)
+		{
+			std::array<double,NUM_OF_CLUSTERS> aDistance{};
+			for (int i{ 0 }; i < NUM_OF_CLUSTERS; i++)
+				aDistance[i] = f8CalculateEuclideanDistance(mfcc, m_aCentroids[i]);
+			auto min = std::min_element(aDistance.begin(), aDistance.end());
+			vecCentroids.push_back(static_cast<int>(std::distance(aDistance.begin(), min)));
+			
+		}
+		int i4Assign{i4FindMode(vecCentroids)};
+
+		if (song.i4Centroid == i4Assign)
+		{
+			song.bWasChanged = false;
+			continue;
+		}
+		song.i4Centroid = i4Assign;
+		song.bWasChanged = true;
+	}
+	return true;
 }
 
 bool c_KMeans::bCalculateCenters()
@@ -220,4 +253,32 @@ double c_KMeans::f8CalculateSqurEuclideanDistance(const std::array<double, NUM_O
 		f8Sum += dist*dist;
 	}
 	return f8Sum;
+}
+
+double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b) const
+{
+	double f8Sum{0};
+	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	{
+		double dist {a[i]-b[i]};
+		f8Sum += dist*dist;
+	}
+	return sqrt(f8Sum);
+}
+
+int c_KMeans::i4FindMode(const std::vector<int> & vec) const
+{
+	std::array<int, NUM_OF_CLUSTERS> aCentroidsCount{0};
+	for(auto const & centroid : vec)
+		aCentroidsCount[centroid]++;
+
+	int i4MostCommonValue = 0;
+    int i4HighestCount = 0;
+	for (int i {0}; i < NUM_OF_CLUSTERS; ++i) {
+        if (aCentroidsCount[i] > i4HighestCount) {
+            i4HighestCount = aCentroidsCount[i];
+            i4MostCommonValue = i;
+        }
+    }
+	return i4MostCommonValue;
 }
