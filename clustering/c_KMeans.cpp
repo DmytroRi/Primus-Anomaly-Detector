@@ -47,11 +47,11 @@ void c_KMeans::RunAlgorithm()
 	}
 
 	if(bCalculateCenters() && !m_bTerminated)
-		std::cout<<"New Centroids were calculated.\n";
+		std::cout<<"New centroids were calculated.\n";
 	else
 	{
 		m_bTerminated = true;
-		std::cout<<"Calculation on new centroids were failed. Termination of program.\n";
+		std::cout<<"Calculation on new centroids was failed. Termination of program.\n";
 	}
 }
 
@@ -129,7 +129,7 @@ bool c_KMeans::bInitCentroids()
 
 	std::vector<double> vecMinDist2(vecAllSegments.size());
 	for (int i {0}; i < vecAllSegments.size(); i++)
-		vecMinDist2[i] = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[0]);
+		vecMinDist2[i] = f8CalculateEuclideanDistance(vecAllSegments[i], m_aCentroids[0]);
 
 	for (int k {1}; k < NUM_OF_CLUSTERS; ++k)
 	{
@@ -140,7 +140,7 @@ bool c_KMeans::bInitCentroids()
         // Update minDist2
         for (size_t i = 0; i < vecAllSegments.size(); ++i)
 		{
-			double d2 = f8CalculateSqurEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);
+			double d2 = f8CalculateEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);
 			if (d2 < vecMinDist2[i])
 				vecMinDist2[i] = d2;
         }
@@ -293,7 +293,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::UNDEFINED;
 }
 
-double c_KMeans::f8CalculateSqurEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b) const
+double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b, const bool isSqrt /*=false*/) const
 {
 	double f8Sum{0};
 	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
@@ -301,16 +301,7 @@ double c_KMeans::f8CalculateSqurEuclideanDistance(const std::array<double, NUM_O
 		double dist {a[i]-b[i]};
 		f8Sum += dist*dist;
 	}
+	if(isSqrt)
+		return sqrt(f8Sum);
 	return f8Sum;
-}
-
-double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b) const
-{
-	double f8Sum{0};
-	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-	{
-		double dist {a[i]-b[i]};
-		f8Sum += dist*dist;
-	}
-	return sqrt(f8Sum);
 }
