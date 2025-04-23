@@ -53,6 +53,14 @@ void c_KMeans::RunAlgorithm()
 		m_bTerminated = true;
 		std::cout<<"Calculation on new centroids was failed. Termination of program.\n";
 	}
+
+	if(bWriteData() && !m_bTerminated)
+		std::cout<<"Results of clusterization are saved now.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Writing results was failed. Termination of program.\n";
+	}
 }
 
 bool c_KMeans::bReadData()
@@ -235,7 +243,16 @@ bool c_KMeans::bCalculateCenters()
 
 bool c_KMeans::bWriteData()
 {
-	return false;
+	nlohmann::json j;
+    for (auto const& song : m_vecDataSet)
+	{
+        j[std::to_string(song.i4Centroid)].push_back({
+            {"name",  song.strName},
+            {"genre", sEnumGenreToStr(song.eGenre)}
+        });
+    }
+	std::ofstream("RESULT.json") << j.dump(2);
+	return true;
 }
 
 void c_KMeans::FindMFCCsBounds()
@@ -287,7 +304,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::NU_METAL;
 	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
 		return e_Genres::THRASH_METAL;
-	else if(sGenre == "Primus metal" || sGenre == "primus_metal")
+	else if(sGenre == "Primus" || sGenre == "primus")
 		return e_Genres::PRIMUS;
 	else
 		return e_Genres::UNDEFINED;
