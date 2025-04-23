@@ -304,7 +304,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::NU_METAL;
 	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
 		return e_Genres::THRASH_METAL;
-	else if(sGenre == "Primus metal" || sGenre == "primus_metal")
+	else if(sGenre == "Primus" || sGenre == "primus")
 		return e_Genres::PRIMUS;
 	else
 		return e_Genres::UNDEFINED;
