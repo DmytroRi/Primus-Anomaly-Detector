@@ -15,7 +15,9 @@ private:
 	bool			bInitCentroids();
 	bool			bAssignItems();
 	bool			bCalculateCenters();
-	bool			bWriteData();
+	bool			bWriteData() const;
+
+	bool			bIsConvergenceAchieved() const;
 
 	void			FindMFCCsBounds();
 

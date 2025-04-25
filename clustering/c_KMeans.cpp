@@ -55,6 +55,9 @@ void c_KMeans::RunAlgorithm()
 			m_bTerminated = true;
 			std::cout << "Calculation on new centroids was failed. Termination of program.\n";
 		}
+
+		if(bIsConvergenceAchieved())
+			break;
 	}
 
 	if(bWriteData() && !m_bTerminated)
@@ -244,7 +247,7 @@ bool c_KMeans::bCalculateCenters()
 	return true;
 }
 
-bool c_KMeans::bWriteData()
+bool c_KMeans::bWriteData() const
 {
 	nlohmann::json j;
     for (auto const& song : m_vecDataSet)
@@ -256,6 +259,15 @@ bool c_KMeans::bWriteData()
     }
 	std::ofstream("RESULT.json") << j.dump(2);
 	return true;
+}
+
+bool c_KMeans::bIsConvergenceAchieved() const
+{
+	for (auto const & song : m_vecDataSet)
+		if(song.bWasChanged == true)
+			return false;
+
+	return false;
 }
 
 void c_KMeans::FindMFCCsBounds()
