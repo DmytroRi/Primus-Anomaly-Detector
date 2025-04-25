@@ -9,6 +9,7 @@ using json = nlohmann::json;
 #define NUM_OF_MFCCS  13		// Amount of MFCCs in dataset
 #define NUM_OF_CLUSTERS  8		// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
 #define D2_SAMPLING				// Use k-means++ initialization for initial centroids
+#define MAX_ITERATIONS 500'000	// Max number of runs
 
 // Enum class with all genres
 enum class e_Genres

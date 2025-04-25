@@ -38,20 +38,23 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"Failed in initializing the starting centroids. Termination of program.\n";
 	}
 
-	if(bAssignItems() && !m_bTerminated)
-		std::cout<<"Songs were assigned.\n";
-	else
+	for (int i{ 0 }; i < MAX_ITERATIONS; i++)
 	{
-		m_bTerminated = true;
-		std::cout<<"Assignment failed. Termination of program.\n";
-	}
+		if (bAssignItems() && !m_bTerminated)
+			std::cout << "Songs were assigned.\n";
+		else
+		{
+			m_bTerminated = true;
+			std::cout << "Assignment failed. Termination of program.\n";
+		}
 
-	if(bCalculateCenters() && !m_bTerminated)
-		std::cout<<"New centroids were calculated.\n";
-	else
-	{
-		m_bTerminated = true;
-		std::cout<<"Calculation on new centroids was failed. Termination of program.\n";
+		if (bCalculateCenters() && !m_bTerminated)
+			std::cout << "New centroids were calculated.\n";
+		else
+		{
+			m_bTerminated = true;
+			std::cout << "Calculation on new centroids was failed. Termination of program.\n";
+		}
 	}
 
 	if(bWriteData() && !m_bTerminated)
