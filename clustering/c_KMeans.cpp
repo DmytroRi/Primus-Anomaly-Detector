@@ -20,63 +20,68 @@ c_KMeans::~c_KMeans()
 
 void c_KMeans::RunAlgorithm()
 {
-	std::cout<<"Start of the K-Means Clustering Algorithm.\n";
+	std::cout<<"Start of the K-Means Clustering Algorithm...\n";
 	
 	if(bReadData())
-		std::cout<<"The dataset was succesfully loaded.\n";
+		std::cout<<"Dataset successfully loaded.\n";
 	else
 	{
 		m_bTerminated = true;
-		std::cout<<"The dataset upload was failed. Termination of program.\n";
+		std::cout<<"Failed to load the dataset. Terminating program.\n";
 	}
 
-	if(bInitCentroids() && !m_bTerminated)
-		std::cout<<"The starting centroids were initialized.\n";
+	if(bInitCentroids() || !m_bTerminated)
+		std::cout<<"Initial centroids have been set.\n";
 	else
 	{
 		m_bTerminated = true;
-		std::cout<<"Failed in initializing the starting centroids. Termination of program.\n";
+		std::cout<<"Failed to initialize centroids. Terminating program.\n";
 	}
 
+	if(m_bTerminated)
+		return;
+
+	std::cout<<"\nK-Means execution started.\nIteration number:\n";
+	std::cout<<"0\n";
 	for (int i{ 0 }; i < MAX_ITERATIONS; i++)
 	{
-		if (bAssignItems() && !m_bTerminated)
-			std::cout << "Songs were assigned.\n";
-		else
+		if (!bAssignItems() || m_bTerminated)
 		{
 			m_bTerminated = true;
-			std::cout << "Assignment failed. Termination of program.\n";
+			std::cout << "Item assignment failed. Terminating program.\n";
 		}
 
-		if (bCalculateCenters() && !m_bTerminated)
-			std::cout << "New centroids were calculated.\n";
-		else
+		if (!bCalculateCenters() || m_bTerminated)
 		{
 			m_bTerminated = true;
-			std::cout << "Calculation on new centroids was failed. Termination of program.\n";
+			std::cout << "Failed to update centroids. Terminating program.\n";
 		}
 
-		if(bIsConvergenceAchieved())
+		if(bIsConvergenceAchieved() || m_bTerminated)
 			break;
+
+		std::cout << "\033[1A";
+		std::cout << "\033[2K";
+		std::cout << i << "\n";
 	}
 
 	if(bWriteData() && !m_bTerminated)
-		std::cout<<"Results of clusterization are saved now.\n";
+		std::cout<<"Clustering results saved successfully.\n";
 	else
 	{
 		m_bTerminated = true;
-		std::cout<<"Writing results was failed. Termination of program.\n";
+		std::cout<<"Failed to save clustering results. Terminating program.\n";
 	}
 }
 
 bool c_KMeans::bReadData()
 {
-	std::cout<<"Loading data from the dataset.\n";
+	std::cout<<"Loading data from dataset...\n";
 
 	std::ifstream in{"data_mean_15s.json"};
 	if (!in.is_open())
 	{
-		std::cout<<"Could not open data_mean_15s.json\n";
+		std::cout<<"Failed to open 'data_mean_15s.json'.\n";
 		return false;
 	}
 
