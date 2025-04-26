@@ -20,6 +20,9 @@ c_KMeans::~c_KMeans()
 
 void c_KMeans::RunAlgorithm()
 {
+	sLog.tStartOfExecution = GetCurrentTime();
+	sLog.i4IterationsNum = 0;
+
 	std::cout<<"Start of the K-Means Clustering Algorithm...\n";
 	
 	if(bReadData())
@@ -43,7 +46,7 @@ void c_KMeans::RunAlgorithm()
 
 	std::cout<<"\nK-Means execution started.\nIteration number:\n";
 	std::cout<<"0\n";
-	for (int i{ 0 }; i < MAX_ITERATIONS; i++)
+	for (sLog.i4IterationsNum; sLog.i4IterationsNum < MAX_ITERATIONS; sLog.i4IterationsNum++)
 	{
 		if (!bAssignItems() || m_bTerminated)
 		{
@@ -62,8 +65,10 @@ void c_KMeans::RunAlgorithm()
 
 		std::cout << "\033[1A";
 		std::cout << "\033[2K";
-		std::cout << i << "\n";
+		std::cout << sLog.i4IterationsNum << "\n";
 	}
+
+	LogProtocol();
 
 	if(bWriteData() && !m_bTerminated)
 		std::cout<<"Clustering results saved successfully.\n";
@@ -154,7 +159,7 @@ bool c_KMeans::bInitCentroids()
 	{
         std::discrete_distribution<size_t> dist(vecMinDist2.begin(), vecMinDist2.end());
         size_t idx = dist(gen);
-        m_aCentroids[k] = vecAllSegments[idx];
+        m_aCentroids[k] = sLog.aInitCentroids[k] = vecAllSegments[idx];
 
         // Update minDist2
         for (size_t i = 0; i < vecAllSegments.size(); ++i)
@@ -169,8 +174,8 @@ bool c_KMeans::bInitCentroids()
 	{
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
 		{
-        std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-        m_aCentroids[c][d] = dist(gen);
+			std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
+			m_aCentroids[c][d] = sLog.aInitCentroids[c][d] = dist(gen);
 		}
 	}
 #endif	//D2_SAMPLING
@@ -291,6 +296,38 @@ void c_KMeans::FindMFCCsBounds()
 	}
 }
 
+void c_KMeans::LogProtocol()
+{
+	std::tm end {GetCurrentTime()};
+
+	std::ofstream out{LOG_FILE, std::ios::app};
+	if (!out)
+	{
+        std::cout << "Error: could not open " << LOG_FILE << " for logging\n";
+        return;
+    }
+
+	out<<"=== K-Means Clustering Algorithm ===\n";
+	out<<"Execution started at:\t"<< std::put_time(&sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
+	out<<"Execution ended at:\t\t"<< std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
+	out<<"Initial centroids:\n";
+	for (int c{ 0 }; c < NUM_OF_CLUSTERS; c++)
+	{
+		out<<"Centoroid #"<<c<<": [";
+		for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
+		{
+			if(d<NUM_OF_MFCCS-1)
+				out<<sLog.aInitCentroids[c][d]<<",\t";
+			else
+				out<<sLog.aInitCentroids[c][d];
+		}
+			
+		out<<"]\n";
+	}
+
+	std::string sEntry{};
+}
+
 std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
 {
 	switch (eGenre)
@@ -341,4 +378,13 @@ double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MF
 	if(isSqrt)
 		return sqrt(f8Sum);
 	return f8Sum;
+}
+
+std::tm c_KMeans::GetCurrentTime() const
+{
+	auto now   = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_t);							// convert to local time zone
+	return now_tm;
 }
