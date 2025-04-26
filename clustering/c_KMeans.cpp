@@ -316,10 +316,9 @@ void c_KMeans::LogProtocol()
 		out<<"Centoroid #"<<c<<": [";
 		for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
 		{
-			if(d<NUM_OF_MFCCS-1)
-				out<<sLog.aInitCentroids[c][d]<<",\t";
-			else
-				out<<sLog.aInitCentroids[c][d];
+			out << std::setw(10) << std::fixed << std::setprecision(4) << sLog.aInitCentroids[c][d];
+			if (d < NUM_OF_MFCCS - 1)
+				out << ", ";
 		}
 			
 		out<<"]\n";
