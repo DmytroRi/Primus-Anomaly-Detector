@@ -10,6 +10,7 @@ using json = nlohmann::json;
 #define NUM_OF_CLUSTERS  8		// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
 #define D2_SAMPLING				// Use k-means++ initialization for initial centroids
 #define MAX_ITERATIONS 500'000	// Max number of runs
+#define LOG_FILE "Protocol.txt"	// Name of the logging file
 
 // Enum class with all genres
 enum class e_Genres
@@ -34,4 +35,11 @@ struct s_Song
 	std::vector<std::array<double,NUM_OF_MFCCS>>			vecSegments;
 	int														i4Centroid;
 	bool													bWasChanged;
+};
+
+struct s_LoggingInfo
+{
+	int																i4IterationsNum;
+	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
+	std::tm															tStartOfExecution;
 };
