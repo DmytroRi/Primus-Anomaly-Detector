@@ -6,11 +6,14 @@
 
 using json = nlohmann::json;
 
-#define NUM_OF_MFCCS  13		// Amount of MFCCs in dataset
-#define NUM_OF_CLUSTERS  8		// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
-#define D2_SAMPLING				// Use k-means++ initialization for initial centroids
-#define MAX_ITERATIONS 500'000	// Max number of runs
-#define LOG_FILE "Protocol.txt"	// Name of the logging file
+#define NUM_OF_MFCCS  13				// Amount of MFCCs in dataset
+#define NUM_OF_CLUSTERS  8				// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
+#define D2_SAMPLING						// Use k-means++ initialization for initial centroids
+#define MAX_ITERATIONS 500'000			// Max number of runs
+#define SRC_FILE "data_mean_15s.json"	// Name of the dataset file
+#define RES_FILE "RESULT.JSON"			// Name of the result file
+#define LOG_FILE "Protocol.txt"			// Name of the logging file
+//#define EXTENDED_LOGGING				// Enable extended logging
 
 // Enum class with all genres
 enum class e_Genres
@@ -40,6 +43,7 @@ struct s_Song
 struct s_LoggingInfo
 {
 	int																i4IterationsNum;
+	bool															bConvergenceAchieved;
 	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
 	std::tm															tStartOfExecution;
 };
