@@ -83,10 +83,10 @@ bool c_KMeans::bReadData()
 {
 	std::cout<<"Loading data from dataset...\n";
 
-	std::ifstream in{"data_mean_15s.json"};
+	std::ifstream in{SRC_FILE};
 	if (!in.is_open())
 	{
-		std::cout<<"Failed to open 'data_mean_15s.json'.\n";
+		std::cout<<"Failed to open '"<< SRC_FILE<< "'.\n";
 		return false;
 	}
 
