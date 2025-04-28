@@ -20,8 +20,9 @@ c_KMeans::~c_KMeans()
 
 void c_KMeans::RunAlgorithm()
 {
-	sLog.tStartOfExecution = GetCurrentTime();
-	sLog.i4IterationsNum = 0;
+	m_sLog.tStartOfExecution = GetCurrentTime();
+	m_sLog.i4IterationsNum = 0;
+	m_sLog.bConvergenceAchieved = false;
 
 	std::cout<<"Start of the K-Means Clustering Algorithm...\n";
 	
@@ -46,7 +47,7 @@ void c_KMeans::RunAlgorithm()
 
 	std::cout<<"\nK-Means execution started.\nIteration number:\n";
 	std::cout<<"0\n";
-	for (sLog.i4IterationsNum; sLog.i4IterationsNum < MAX_ITERATIONS; sLog.i4IterationsNum++)
+	for (m_sLog.i4IterationsNum; m_sLog.i4IterationsNum < MAX_ITERATIONS; m_sLog.i4IterationsNum++)
 	{
 		if (!bAssignItems() || m_bTerminated)
 		{
@@ -60,12 +61,16 @@ void c_KMeans::RunAlgorithm()
 			std::cout << "Failed to update centroids. Terminating program.\n";
 		}
 
-		if(bIsConvergenceAchieved() || m_bTerminated)
+		if (bIsConvergenceAchieved() || m_bTerminated)
+		{
+			m_sLog.bConvergenceAchieved = true;
+			std::cout << "Convergence achieved.\n";
 			break;
+		}
 
 		std::cout << "\033[1A";
 		std::cout << "\033[2K";
-		std::cout << sLog.i4IterationsNum << "\n";
+		std::cout << m_sLog.i4IterationsNum << "\n";
 	}
 
 	LogProtocol();
@@ -149,7 +154,7 @@ bool c_KMeans::bInitCentroids()
 
 	// Pick the first centroid randomly
 	std::uniform_int_distribution<size_t> pick(0, vecAllSegments.size() - 1);
-	m_aCentroids[0] = sLog.aInitCentroids[0] = vecAllSegments[pick(gen)];
+	m_aCentroids[0] = m_sLog.aInitCentroids[0] = vecAllSegments[pick(gen)];
 
 	std::vector<double> vecMinDist2(vecAllSegments.size());
 	for (int i {0}; i < vecAllSegments.size(); i++)
@@ -159,7 +164,7 @@ bool c_KMeans::bInitCentroids()
 	{
         std::discrete_distribution<size_t> dist(vecMinDist2.begin(), vecMinDist2.end());
         size_t idx = dist(gen);
-        m_aCentroids[k] = sLog.aInitCentroids[k] = vecAllSegments[idx];
+        m_aCentroids[k] = m_sLog.aInitCentroids[k] = vecAllSegments[idx];
 
         // Update minDist2
         for (size_t i = 0; i < vecAllSegments.size(); ++i)
@@ -175,7 +180,7 @@ bool c_KMeans::bInitCentroids()
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
 		{
 			std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-			m_aCentroids[c][d] = sLog.aInitCentroids[c][d] = dist(gen);
+			m_aCentroids[c][d] = m_sLog.aInitCentroids[c][d] = dist(gen);
 		}
 	}
 #endif	//D2_SAMPLING
@@ -263,11 +268,11 @@ bool c_KMeans::bWriteData() const
     for (auto const& song : m_vecDataSet)
 	{
         j[std::to_string(song.i4Centroid)].push_back({
-            {"name",  song.strName},
+            {"name ",  song.strName},
             {"genre", sEnumGenreToStr(song.eGenre)}
         });
     }
-	std::ofstream("RESULT.json") << j.dump(2);
+	std::ofstream(RES_FILE) << j.dump(2);
 	return true;
 }
 
@@ -277,7 +282,7 @@ bool c_KMeans::bIsConvergenceAchieved() const
 		if(song.bWasChanged == true)
 			return false;
 
-	return false;
+	return true;
 }
 
 void c_KMeans::FindMFCCsBounds()
@@ -307,8 +312,8 @@ void c_KMeans::LogProtocol()
         return;
     }
 
-	out<<"=== K-Means Clustering Algorithm ===\n";
-	out<<"Execution started at:\t"<< std::put_time(&sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
+	out<<"\n=== K-Means Clustering Algorithm ===\n";
+	out<<"Execution started at:\t"<< std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Execution ended at:\t\t"<< std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Initial centroids:\n";
 	for (int c{ 0 }; c < NUM_OF_CLUSTERS; c++)
@@ -316,15 +321,29 @@ void c_KMeans::LogProtocol()
 		out<<"Centoroid #"<<c<<": [";
 		for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
 		{
-			out << std::setw(10) << std::fixed << std::setprecision(4) << sLog.aInitCentroids[c][d];
+			out << std::setw(10) << std::fixed << std::setprecision(4) << m_sLog.aInitCentroids[c][d];
 			if (d < NUM_OF_MFCCS - 1)
 				out << ", ";
 		}
 			
 		out<<"]\n";
 	}
+	out << "Amount of executed iterations: " << m_sLog.i4IterationsNum << "\n";
+	out << "Convergence achieved: " << (m_sLog.bConvergenceAchieved ? "Yes" : "No") << "\n";
 
+#ifdef EXTENDED_LOGGING
 	std::string sEntry{};
+	for (auto const & song : m_vecDataSet)
+	{
+		sEntry = sEnumGenreToStr(song.eGenre);
+		out << sEntry << "/" << song.strName << ":\t";
+		out << "Assigned to cluster #" << song.i4Centroid << ", ";
+		out << "Was changed: " << (song.bWasChanged ? "Yes" : "No") << "\n";
+	}
+#endif
+	out << "====================================\n";
+	out.close();
+	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
 std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const

@@ -13,6 +13,7 @@ using json = nlohmann::json;
 #define SRC_FILE "data_mean_15s.json"	// Name of the dataset file
 #define RES_FILE "RESULT.JSON"			// Name of the result file
 #define LOG_FILE "Protocol.txt"			// Name of the logging file
+//#define EXTENDED_LOGGING				// Enable extended logging
 
 // Enum class with all genres
 enum class e_Genres
@@ -42,6 +43,7 @@ struct s_Song
 struct s_LoggingInfo
 {
 	int																i4IterationsNum;
+	bool															bConvergenceAchieved;
 	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
 	std::tm															tStartOfExecution;
 };

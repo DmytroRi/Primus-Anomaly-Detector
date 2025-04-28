@@ -37,7 +37,7 @@ private:
 	std::vector<s_Song>					m_vecDataSet{};
 	std::array<double, NUM_OF_MFCCS>	m_aMaxMFCC{};
 	std::array<double, NUM_OF_MFCCS>	m_aMinMFCC{};
-	s_LoggingInfo						sLog{};
+	s_LoggingInfo						m_sLog{};
 
 
 	std::array<std::array<double, NUM_OF_MFCCS>,NUM_OF_CLUSTERS>	m_aCentroids{};
