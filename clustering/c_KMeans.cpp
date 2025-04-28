@@ -149,7 +149,7 @@ bool c_KMeans::bInitCentroids()
 
 	// Pick the first centroid randomly
 	std::uniform_int_distribution<size_t> pick(0, vecAllSegments.size() - 1);
-	m_aCentroids[0] = vecAllSegments[pick(gen)];
+	m_aCentroids[0] = sLog.aInitCentroids[0] = vecAllSegments[pick(gen)];
 
 	std::vector<double> vecMinDist2(vecAllSegments.size());
 	for (int i {0}; i < vecAllSegments.size(); i++)
