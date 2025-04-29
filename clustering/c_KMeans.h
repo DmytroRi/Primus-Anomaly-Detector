@@ -29,7 +29,8 @@ private:
 	double			f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS>& a,
 												 const std::array<double, NUM_OF_MFCCS>& b,
 												 const bool isSqrt = false) const;
-
+	double			f8CalculatePurity() const;
+	
 	std::tm	GetCurrentTime() const;
 
 	bool								m_bTerminated{};

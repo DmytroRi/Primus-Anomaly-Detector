@@ -68,9 +68,11 @@ void c_KMeans::RunAlgorithm()
 			break;
 		}
 
+		m_sLog.vecPurity.push_back(f8CalculatePurity());
+
 		std::cout << "\033[1A";
 		std::cout << "\033[2K";
-		std::cout << m_sLog.i4IterationsNum << "\n";
+		std::cout << m_sLog.i4IterationsNum+1 << "\n";
 	}
 
 	LogProtocol();
@@ -331,6 +333,9 @@ void c_KMeans::LogProtocol()
 	out << "Amount of executed iterations: " << m_sLog.i4IterationsNum << "\n";
 	out << "Convergence achieved: " << (m_sLog.bConvergenceAchieved ? "Yes" : "No") << "\n";
 
+	for (int i{ 0 }; i < m_sLog.vecPurity.size(); i++)
+		out << "Purity after iteration #" << i+1 << ": " << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i] << "\n";
+
 #ifdef EXTENDED_LOGGING
 	std::string sEntry{};
 	for (auto const & song : m_vecDataSet)
@@ -396,6 +401,30 @@ double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MF
 	if(isSqrt)
 		return sqrt(f8Sum);
 	return f8Sum;
+}
+
+double c_KMeans::f8CalculatePurity() const
+{
+	std::array<std::array<size_t,NUM_OF_CLUSTERS>,NUM_OF_CLUSTERS> aCounts{};
+	for (auto & row : aCounts) row.fill(0);
+
+	for (auto const& song : m_vecDataSet)
+	{
+        int k = song.i4Centroid;
+        int g = static_cast<int>(song.eGenre);
+        if (k >= 0 && k < NUM_OF_CLUSTERS
+			&& g >= 0 && g < NUM_OF_CLUSTERS)
+            aCounts[k][g]++;
+    }
+
+	size_t i4Total{ 0 };
+	for (int i{ 0 }; i < NUM_OF_CLUSTERS; i++)
+	{
+		size_t i4MaxCount {*std::max_element(aCounts[i].begin(), aCounts[i].end())};
+		i4Total += i4MaxCount;
+	}
+
+	return static_cast<double>(i4Total) / m_vecDataSet.size();
 }
 
 std::tm c_KMeans::GetCurrentTime() const

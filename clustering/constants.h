@@ -44,6 +44,7 @@ struct s_LoggingInfo
 {
 	int																i4IterationsNum;
 	bool															bConvergenceAchieved;
+	std::vector<double>												vecPurity;	
 	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
 	std::tm															tStartOfExecution;
 };
