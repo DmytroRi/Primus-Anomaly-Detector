@@ -20,6 +20,7 @@ private:
 	bool			bIsConvergenceAchieved() const;
 
 	void			FindMFCCsBounds();
+	void			NormalizeDataZScore();
 
 	void			LogProtocol();
 
