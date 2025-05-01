@@ -34,6 +34,8 @@ void c_KMeans::RunAlgorithm()
 		std::cout<<"Failed to load the dataset. Terminating program.\n";
 	}
 
+	NormalizeDataZScore();
+
 	if(bInitCentroids() || !m_bTerminated)
 		std::cout<<"Initial centroids have been set.\n";
 	else
@@ -301,6 +303,44 @@ void c_KMeans::FindMFCCsBounds()
 			}
 		}
 	}
+}
+
+void c_KMeans::NormalizeDataZScore()
+{
+	size_t i4NumOfSegments{ 0 };
+	for (auto const & song : m_vecDataSet)
+		i4NumOfSegments += song.vecSegments.size();
+
+	std::array<double, NUM_OF_MFCCS> aSum{};
+	aSum.fill(0.0);
+	std::array<double, NUM_OF_MFCCS> aSumPow2{};
+	aSumPow2.fill(0.0);
+
+	for (auto const & song : m_vecDataSet)
+		for (auto const & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+			{
+				aSum[i] += mfcc[i];
+				aSumPow2[i] += mfcc[i] * mfcc[i];
+			}
+
+	std::array<double, NUM_OF_MFCCS> aMean{};
+	std::array<double, NUM_OF_MFCCS> aStdDev{};
+	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	{
+		aMean[i] = aSum[i] / static_cast<double>(i4NumOfSegments);
+		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
+	}
+
+	for (auto & song : m_vecDataSet)
+		for (auto & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+				if (aStdDev[i] != 0.0)
+					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
+				else
+					mfcc[i] = 0.0;
+
+	return;
 }
 
 void c_KMeans::LogProtocol()
