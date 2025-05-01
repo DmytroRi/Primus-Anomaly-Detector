@@ -35,6 +35,7 @@ void c_KMeans::RunAlgorithm()
 	}
 
 	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
 
 	if(bInitCentroids() || !m_bTerminated)
 		std::cout<<"Initial centroids have been set.\n";
@@ -355,12 +356,16 @@ void c_KMeans::CalculateDeltaAndDeltaDelta()
 		auto & M {song.vecSegments};
 		size_t N {song.vecSegments.size()};
 
+		// Resize delta and delta-delta vectors
+		vecDelta.resize(N);
+		vecDeltaDelta.resize(N);
+
 		// Compute delta coefficients
 		for (int i = 0; i < N; ++i)
 		{
 			int im1 {i == 0 ? 0 : i - 1};
 			int ip1 {i + 1 < N ? i + 1 : i};
-            for (int d = 0; d < 13; ++d)
+            for (int d = 0; d < NUM_OF_MFCCS; ++d)
                 vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
         }
 
@@ -369,14 +374,22 @@ void c_KMeans::CalculateDeltaAndDeltaDelta()
 		{
 			int im1{ i == 0 ? 0 : i - 1 };
 			int ip1{ i + 1 < N ? i + 1 : i };
-			for (int d = 0; d < 13; ++d)
+			for (int d = 0; d < NUM_OF_MFCCS; ++d)
 				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
 		}
 
 		// Append delta and delta-delta coefficients to the extended MFCCs
-
+		for (auto & segment : song.vecSegmentsExtended)
+		{
+			for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
+			{
+				segment[d + NUM_OF_MFCCS] = vecDelta[&segment - &song.vecSegmentsExtended[0]][d];
+				segment[d + 2 * NUM_OF_MFCCS] = vecDeltaDelta[&segment - &song.vecSegmentsExtended[0]][d];
+			}
+		}
 
 	}
+	return;
 }
 
 void c_KMeans::LogProtocol()

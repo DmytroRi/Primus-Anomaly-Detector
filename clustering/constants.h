@@ -40,7 +40,7 @@ struct s_Song
 	int														i4Centroid;
 	bool													bWasChanged;
 };
-
+// Logging information
 struct s_LoggingInfo
 {
 	int																i4IterationsNum;
