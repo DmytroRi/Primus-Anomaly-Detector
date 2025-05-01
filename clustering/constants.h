@@ -33,19 +33,20 @@ enum class e_Genres
 // Songs information
 struct s_Song
 {
-	e_Genres												eGenre;
-	std::string												strName;
-	std::vector<std::array<double,NUM_OF_MFCCS>>			vecSegments;
-	std::vector<std::array<double, NUM_OF_MFCCS * 3>>		vecSegmentsExtended;	
-	int														i4Centroid;
-	bool													bWasChanged;
+	e_Genres												eGenre;						// Genre of the song
+	std::string												strName;					// Name of the song
+	std::vector<std::array<double, NUM_OF_MFCCS>>			vecSegments;				// MFCCs of the song
+	std::vector<std::array<double, NUM_OF_MFCCS * 3>>		vecSegmentsExtended;		// MFCCs + delta + delta-delta
+	std::vector<std::vector<double>>						vecFeatures;				// MFCCs + delta + delta-delta
+	int														i4Centroid; 				// ID of the centroid assigned to the song
+	bool													bWasChanged;				// Flag indicating if the song was assigned to a different centroid
 };
 // Logging information
 struct s_LoggingInfo
 {
-	int																i4IterationsNum;
-	bool															bConvergenceAchieved;
-	std::vector<double>												vecPurity;	
-	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
-	std::tm															tStartOfExecution;
+	int																i4IterationsNum;		// Number of iterations
+	bool															bConvergenceAchieved;	// Flag indicating if convergence was achieved
+	std::vector<double>												vecPurity;				// Purity of the clusters	
+	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;			// Initial centroids	
+	std::tm															tStartOfExecution;		// Start time of the execution
 };

@@ -126,7 +126,6 @@ bool c_KMeans::bReadData()
                     mfcc[i] = mfccArr[i].get<double>();
 
 				sSong.vecSegments.push_back(mfcc);
-				sSong.vecSegmentsExtended.push_back({ mfcc[0], mfcc[1], mfcc[2], mfcc[3], mfcc[4], mfcc[5], mfcc[6], mfcc[7], mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12] });
 			}
 
 			m_vecDataSet.push_back(std::move(sSong));
@@ -335,6 +334,7 @@ void c_KMeans::NormalizeDataZScore()
 		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
 	}
 
+	// Normalize and save the MFCCs
 	for (auto & song : m_vecDataSet)
 		for (auto & mfcc : song.vecSegments)
 			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
@@ -342,6 +342,28 @@ void c_KMeans::NormalizeDataZScore()
 					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
 				else
 					mfcc[i] = 0.0;
+
+	// Save the normalized MFCCs to the extended features vector
+	for (auto & song : m_vecDataSet)
+		for (auto & feature : song.vecFeatures)
+		{
+			for (auto const & mfcc : song.vecSegments)
+			{
+				feature.push_back(mfcc[0]);
+				feature.push_back(mfcc[1]);
+				feature.push_back(mfcc[2]);
+				feature.push_back(mfcc[3]);
+				feature.push_back(mfcc[4]);
+				feature.push_back(mfcc[5]);
+				feature.push_back(mfcc[6]);
+				feature.push_back(mfcc[7]);
+				feature.push_back(mfcc[8]);
+				feature.push_back(mfcc[9]);
+				feature.push_back(mfcc[10]);
+				feature.push_back(mfcc[11]);
+				feature.push_back(mfcc[12]);
+			}
+		}
 
 	return;
 }
