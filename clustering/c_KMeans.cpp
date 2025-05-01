@@ -9,7 +9,7 @@ c_KMeans::c_KMeans()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
 {
-	m_aMaxMFCC.fill(std::numeric_limits<double>::infinity());
+	m_aMaxMFCC.fill(std::numeric_limits<double>::lowest());
 	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
 }
 
@@ -35,6 +35,7 @@ void c_KMeans::RunAlgorithm()
 	}
 
 	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
 
 	if(bInitCentroids() || !m_bTerminated)
 		std::cout<<"Initial centroids have been set.\n";
@@ -125,6 +126,7 @@ bool c_KMeans::bReadData()
                     mfcc[i] = mfccArr[i].get<double>();
 
 				sSong.vecSegments.push_back(mfcc);
+				sSong.vecSegmentsExtended.push_back({ mfcc[0], mfcc[1], mfcc[2], mfcc[3], mfcc[4], mfcc[5], mfcc[6], mfcc[7], mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12] });
 			}
 
 			m_vecDataSet.push_back(std::move(sSong));
@@ -179,6 +181,7 @@ bool c_KMeans::bInitCentroids()
         }
     }
 #else	// random initialization
+	FindMFCCsBounds();
 	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
 	{
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
@@ -340,6 +343,52 @@ void c_KMeans::NormalizeDataZScore()
 				else
 					mfcc[i] = 0.0;
 
+	return;
+}
+
+void c_KMeans::CalculateDeltaAndDeltaDelta()
+{
+	for (auto & song : m_vecDataSet)
+	{
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
+
+		auto & M {song.vecSegments};
+		size_t N {song.vecSegments.size()};
+
+		// Resize delta and delta-delta vectors
+		vecDelta.resize(N);
+		vecDeltaDelta.resize(N);
+
+		// Compute delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1 {i == 0 ? 0 : i - 1};
+			int ip1 {i + 1 < N ? i + 1 : i};
+            for (int d = 0; d < NUM_OF_MFCCS; ++d)
+                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
+        }
+
+		// Compute delta-delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1{ i == 0 ? 0 : i - 1 };
+			int ip1{ i + 1 < N ? i + 1 : i };
+			for (int d = 0; d < NUM_OF_MFCCS; ++d)
+				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
+		}
+
+		// Append delta and delta-delta coefficients to the extended MFCCs
+		for (auto & segment : song.vecSegmentsExtended)
+		{
+			for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
+			{
+				segment[d + NUM_OF_MFCCS] = vecDelta[&segment - &song.vecSegmentsExtended[0]][d];
+				segment[d + 2 * NUM_OF_MFCCS] = vecDeltaDelta[&segment - &song.vecSegmentsExtended[0]][d];
+			}
+		}
+
+	}
 	return;
 }
 

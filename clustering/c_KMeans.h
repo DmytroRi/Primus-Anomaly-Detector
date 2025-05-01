@@ -21,6 +21,7 @@ private:
 
 	void			FindMFCCsBounds();
 	void			NormalizeDataZScore();
+	void			CalculateDeltaAndDeltaDelta();
 
 	void			LogProtocol();
 

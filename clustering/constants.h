@@ -36,10 +36,11 @@ struct s_Song
 	e_Genres												eGenre;
 	std::string												strName;
 	std::vector<std::array<double,NUM_OF_MFCCS>>			vecSegments;
+	std::vector<std::array<double, NUM_OF_MFCCS * 3>>		vecSegmentsExtended;	
 	int														i4Centroid;
 	bool													bWasChanged;
 };
-
+// Logging information
 struct s_LoggingInfo
 {
 	int																i4IterationsNum;
