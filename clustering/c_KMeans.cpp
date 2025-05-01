@@ -144,37 +144,39 @@ bool c_KMeans::bInitCentroids()
 
 #ifdef D2_SAMPLING	// intialization using k-means++
 	// Flatten all segments into one array
-	std::vector<std::array<double, NUM_OF_MFCCS>> vecAllSegments{};
-	vecAllSegments.reserve(
-		std::accumulate(m_vecDataSet.begin(), m_vecDataSet.end(), size_t{0},
-        [](size_t acc, auto const& s){ return acc + s.vecSegments.size(); })
-	);
+	std::vector<std::vector<double>> vecAllSegments{};
+	//vecAllSegments.reserve(
+	//	std::accumulate(m_vecDataSet.begin(), m_vecDataSet.end(), size_t{0},
+    //    [](size_t acc, auto const& s){ return acc + s.vecSegments.size(); })
+	//);
 	for (auto const& song : m_vecDataSet)
 	{
-		for (auto const& mfcc : song.vecSegments)
+		for (auto const& features : song.vecFeatures)
 		{
-			vecAllSegments.push_back(mfcc);
+			vecAllSegments.push_back(features);
 		}
     }
 
 	// Pick the first centroid randomly
 	std::uniform_int_distribution<size_t> pick(0, vecAllSegments.size() - 1);
-	m_aCentroids[0] = m_sLog.aInitCentroids[0] = vecAllSegments[pick(gen)];
+	m_vecCentroids.push_back(vecAllSegments[pick(gen)]);
+	m_sLog.vecInitCentroids.push_back(m_vecCentroids[0]);
 
 	std::vector<double> vecMinDist2(vecAllSegments.size());
 	for (int i {0}; i < vecAllSegments.size(); i++)
-		vecMinDist2[i] = f8CalculateEuclideanDistance(vecAllSegments[i], m_aCentroids[0]);
+		vecMinDist2[i] = f8CalculateEuclideanDistance(vecAllSegments[i], m_vecCentroids[0]);
 
-	for (int k {1}; k < NUM_OF_CLUSTERS; ++k)
+	for (int k {1}; k < NUM_OF_CLUSTERS; k++)
 	{
         std::discrete_distribution<size_t> dist(vecMinDist2.begin(), vecMinDist2.end());
         size_t idx = dist(gen);
-        m_aCentroids[k] = m_sLog.aInitCentroids[k] = vecAllSegments[idx];
+        m_vecCentroids.push_back(vecAllSegments[idx]);
+		m_sLog.vecInitCentroids.push_back(vecAllSegments[idx]);
 
         // Update minDist2
-        for (size_t i = 0; i < vecAllSegments.size(); ++i)
+        for (size_t i = 0; i < vecAllSegments.size(); i++)
 		{
-			double d2 = f8CalculateEuclideanDistance(vecAllSegments[i], m_aCentroids[k]);
+			double d2 = f8CalculateEuclideanDistance(vecAllSegments[i], m_vecCentroids[k]);
 			if (d2 < vecMinDist2[i])
 				vecMinDist2[i] = d2;
         }
@@ -186,7 +188,7 @@ bool c_KMeans::bInitCentroids()
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
 		{
 			std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-			m_aCentroids[c][d] = m_sLog.aInitCentroids[c][d] = dist(gen);
+			m_vecCentroids[c][d] = m_sLog.aInitCentroids[c][d] = dist(gen);
 		}
 	}
 #endif	//D2_SAMPLING
@@ -199,14 +201,14 @@ bool c_KMeans::bAssignItems()
 	for (auto & song : m_vecDataSet)
 	{
 		if (song.vecSegments.empty()) continue;
-		std::array<int, NUM_OF_CLUSTERS> aCenroidsCounts{};
-		for (auto const & mfcc : song.vecSegments)
+		std::array<int, NUM_OF_FEATURES> aCenroidsCounts{};
+		for (auto const & features : song.vecFeatures)
 		{
 			double f8BestDistance{std::numeric_limits<double>::infinity()};
 			int i4BestDistPlace{0};
 			for (int i{ 0 }; i < NUM_OF_CLUSTERS; i++)
 			{
-				double f8Distance {f8CalculateEuclideanDistance(mfcc, m_aCentroids[i])};
+				double f8Distance {f8CalculateEuclideanDistance(features, m_vecCentroids[i])};
 				if (f8Distance < f8BestDistance)
 				{
 					f8BestDistance = f8Distance;
@@ -233,7 +235,7 @@ bool c_KMeans::bAssignItems()
 
 bool c_KMeans::bCalculateCenters()
 {
-	std::array<std::array<double,NUM_OF_MFCCS>, NUM_OF_CLUSTERS> aSum{};
+	std::array<std::array<double,NUM_OF_FEATURES>, NUM_OF_CLUSTERS> aSum{};
     std::array<int, NUM_OF_CLUSTERS> aCount{};
     aSum.fill({});
     aCount.fill(0);
@@ -245,10 +247,10 @@ bool c_KMeans::bCalculateCenters()
 		if(i4CentroidID < 0 || i4CentroidID > NUM_OF_CLUSTERS)
 			continue;
 
-		for (auto const & mfcc : song.vecSegments)
+		for (auto const & features : song.vecFeatures)
 		{
-			for (int i4MfccID{ 0 }; i4MfccID < NUM_OF_MFCCS; i4MfccID++)
-				aSum[i4CentroidID][i4MfccID] += mfcc[i4MfccID];
+			for (int i4MfccID{ 0 }; i4MfccID < NUM_OF_FEATURES; i4MfccID++)
+				aSum[i4CentroidID][i4MfccID] += features[i4MfccID];
 			aCount[i4CentroidID]++;
 		}
 	}
@@ -261,8 +263,8 @@ bool c_KMeans::bCalculateCenters()
 			// no segments assigned to cluster (reseeding required?)
 			return false;
 		}*/
-		for (int i4MfccID{ 0 }; i4MfccID < NUM_OF_MFCCS; i4MfccID++)
-			m_aCentroids[i4CentroidID][i4MfccID] = aSum[i4CentroidID][i4MfccID]/
+		for (int i4MfccID{ 0 }; i4MfccID < NUM_OF_FEATURES; i4MfccID++)
+			m_vecCentroids[i4CentroidID][i4MfccID] = aSum[i4CentroidID][i4MfccID]/
 												   static_cast<double>(aCount[i4CentroidID]);
 	}
 	return true;
@@ -345,25 +347,12 @@ void c_KMeans::NormalizeDataZScore()
 
 	// Save the normalized MFCCs to the extended features vector
 	for (auto & song : m_vecDataSet)
-		for (auto & feature : song.vecFeatures)
-		{
 			for (auto const & mfcc : song.vecSegments)
 			{
-				feature.push_back(mfcc[0]);
-				feature.push_back(mfcc[1]);
-				feature.push_back(mfcc[2]);
-				feature.push_back(mfcc[3]);
-				feature.push_back(mfcc[4]);
-				feature.push_back(mfcc[5]);
-				feature.push_back(mfcc[6]);
-				feature.push_back(mfcc[7]);
-				feature.push_back(mfcc[8]);
-				feature.push_back(mfcc[9]);
-				feature.push_back(mfcc[10]);
-				feature.push_back(mfcc[11]);
-				feature.push_back(mfcc[12]);
+				song.vecFeatures.push_back({mfcc[0], mfcc[1], mfcc[2],mfcc[3],
+											mfcc[4], mfcc[5], mfcc[6],mfcc[7],
+											mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12],});
 			}
-		}
 
 	return;
 }
@@ -400,14 +389,13 @@ void c_KMeans::CalculateDeltaAndDeltaDelta()
 				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
 		}
 
-		// Append delta and delta-delta coefficients to the extended MFCCs
-		for (auto & segment : song.vecSegmentsExtended)
+		// Append delta and delta-delta coefficients to the features
+		for (int i = 0; i < N; ++i)
 		{
-			for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
-			{
-				segment[d + NUM_OF_MFCCS] = vecDelta[&segment - &song.vecSegmentsExtended[0]][d];
-				segment[d + 2 * NUM_OF_MFCCS] = vecDeltaDelta[&segment - &song.vecSegmentsExtended[0]][d];
-			}
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDelta[i][j]);
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDeltaDelta[i][j]);
 		}
 
 	}
@@ -432,10 +420,10 @@ void c_KMeans::LogProtocol()
 	for (int c{ 0 }; c < NUM_OF_CLUSTERS; c++)
 	{
 		out<<"Centoroid #"<<c<<": [";
-		for (int d{ 0 }; d < NUM_OF_MFCCS; d++)
+		for (int d{ 0 }; d < NUM_OF_FEATURES; d++)
 		{
-			out << std::setw(10) << std::fixed << std::setprecision(4) << m_sLog.aInitCentroids[c][d];
-			if (d < NUM_OF_MFCCS - 1)
+			out << std::setw(10) << std::fixed << std::setprecision(4) << m_sLog.vecInitCentroids[c][d];
+			if (d < NUM_OF_FEATURES - 1)
 				out << ", ";
 		}
 			
@@ -501,7 +489,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::UNDEFINED;
 }
 
-double c_KMeans::f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS> & a, const std::array<double, NUM_OF_MFCCS> & b, const bool isSqrt /*=false*/) const
+double c_KMeans::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
 {
 	double f8Sum{0};
 	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)

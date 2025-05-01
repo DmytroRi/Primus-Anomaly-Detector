@@ -28,8 +28,8 @@ private:
 	std::string		sEnumGenreToStr(const e_Genres & eGenre) const;
 	e_Genres		eStrGenreToEnum(const std::string & sGenre) const;
 
-	double			f8CalculateEuclideanDistance(const std::array<double, NUM_OF_MFCCS>& a,
-												 const std::array<double, NUM_OF_MFCCS>& b,
+	double			f8CalculateEuclideanDistance(const std::vector<double>& a,
+												 const std::vector<double>& b,
 												 const bool isSqrt = false) const;
 	double			f8CalculatePurity() const;
 	
@@ -43,6 +43,6 @@ private:
 	s_LoggingInfo						m_sLog{};
 
 
-	std::array<std::array<double, NUM_OF_MFCCS>,NUM_OF_CLUSTERS>	m_aCentroids{};
+	std::vector<std::vector<double>>	m_vecCentroids{};
 };
 

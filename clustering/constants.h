@@ -6,6 +6,7 @@
 
 using json = nlohmann::json;
 
+#define NUM_OF_FEATURES  39				// Amount of features in dataset per song ( 13 MFCCs + 13 delta + 13 delta-delta)
 #define NUM_OF_MFCCS  13				// Amount of MFCCs in dataset
 #define NUM_OF_CLUSTERS  8				// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
 #define D2_SAMPLING						// Use k-means++ initialization for initial centroids
@@ -47,6 +48,6 @@ struct s_LoggingInfo
 	int																i4IterationsNum;		// Number of iterations
 	bool															bConvergenceAchieved;	// Flag indicating if convergence was achieved
 	std::vector<double>												vecPurity;				// Purity of the clusters	
-	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;			// Initial centroids	
+	std::vector<std::vector<double>>								vecInitCentroids;			// Initial centroids	
 	std::tm															tStartOfExecution;		// Start time of the execution
 };
