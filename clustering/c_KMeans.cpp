@@ -125,6 +125,7 @@ bool c_KMeans::bReadData()
                     mfcc[i] = mfccArr[i].get<double>();
 
 				sSong.vecSegments.push_back(mfcc);
+				sSong.vecSegmentsExtended.push_back({ mfcc[0], mfcc[1], mfcc[2], mfcc[3], mfcc[4], mfcc[5], mfcc[6], mfcc[7], mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12] });
 			}
 
 			m_vecDataSet.push_back(std::move(sSong));
@@ -342,6 +343,40 @@ void c_KMeans::NormalizeDataZScore()
 					mfcc[i] = 0.0;
 
 	return;
+}
+
+void c_KMeans::CalculateDeltaAndDeltaDelta()
+{
+	for (auto & song : m_vecDataSet)
+	{
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
+
+		auto & M {song.vecSegments};
+		size_t N {song.vecSegments.size()};
+
+		// Compute delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1 {i == 0 ? 0 : i - 1};
+			int ip1 {i + 1 < N ? i + 1 : i};
+            for (int d = 0; d < 13; ++d)
+                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
+        }
+
+		// Compute delta-delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1{ i == 0 ? 0 : i - 1 };
+			int ip1{ i + 1 < N ? i + 1 : i };
+			for (int d = 0; d < 13; ++d)
+				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
+		}
+
+		// Append delta and delta-delta coefficients to the extended MFCCs
+
+
+	}
 }
 
 void c_KMeans::LogProtocol()
