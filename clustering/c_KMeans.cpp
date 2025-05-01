@@ -9,7 +9,7 @@ c_KMeans::c_KMeans()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
 {
-	m_aMaxMFCC.fill(std::numeric_limits<double>::infinity());
+	m_aMaxMFCC.fill(std::numeric_limits<double>::lowest());
 	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
 }
 
@@ -179,6 +179,7 @@ bool c_KMeans::bInitCentroids()
         }
     }
 #else	// random initialization
+	FindMFCCsBounds();
 	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
 	{
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
