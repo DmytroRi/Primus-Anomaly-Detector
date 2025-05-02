@@ -1,10 +1,19 @@
 -------------------------------------------
-TOTAL
+TOTAL (5 seconds)
 Total duration of tracks: 145912.75277445107 seconds.
 Total amount of segments: 28945.
 Segments duration: 5 seconds.
 Total effective duration: 144725 seconds. (40 hours, 12 minutes and 05 seconds)
 Retention rate: 99.1859842598631%.
+-------------------------------------------
+
+-------------------------------------------
+TOTAL (1 second)
+Total duration of tracks: 145587.54311377244 seconds.
+Total amount of segments: 145342.
+Segments duration: 1 seconds.
+Total effective duration: 145342 seconds.
+Retention rate: 99.83134332201722%.
 -------------------------------------------
 
 -------------------------------------------
