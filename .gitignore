@@ -1,6 +1,5 @@
 # Ignore the virtual_env directory
-virtual_env/
-music_data
+virtual_env/*
 
 # Other common ignores
 *.pyc
@@ -8,3 +7,9 @@ __pycache__/
 *.log
 .env
 .DS_Store
+
+# Ignore project files except .cpp and .h
+.vs/
+clustering/*
+!clustering/*.cpp
+!clustering/*.h
