@@ -6,6 +6,7 @@
 
 using json = nlohmann::json;
 
+#define NUM_OF_FEATURES  39				// Amount of features in dataset per song ( 13 MFCCs + 13 delta + 13 delta-delta)
 #define NUM_OF_MFCCS  13				// Amount of MFCCs in dataset
 #define NUM_OF_CLUSTERS  8				// Amount of clusters (note: must be either n or n-1, where n is amount of genres) 
 #define D2_SAMPLING						// Use k-means++ initialization for initial centroids
@@ -33,19 +34,19 @@ enum class e_Genres
 // Songs information
 struct s_Song
 {
-	e_Genres												eGenre;
-	std::string												strName;
-	std::vector<std::array<double,NUM_OF_MFCCS>>			vecSegments;
-	std::vector<std::array<double, NUM_OF_MFCCS * 3>>		vecSegmentsExtended;	
-	int														i4Centroid;
-	bool													bWasChanged;
+	e_Genres												eGenre;						// Genre of the song
+	std::string												strName;					// Name of the song
+	std::vector<std::array<double, NUM_OF_MFCCS>>			vecSegments;				// MFCCs of the song
+	std::vector<std::vector<double>>						vecFeatures;				// MFCCs + delta + delta-delta
+	int														i4Centroid; 				// ID of the centroid assigned to the song
+	bool													bWasChanged;				// Flag indicating if the song was assigned to a different centroid
 };
 // Logging information
 struct s_LoggingInfo
 {
-	int																i4IterationsNum;
-	bool															bConvergenceAchieved;
-	std::vector<double>												vecPurity;	
-	std::array<std::array<double, NUM_OF_MFCCS>, NUM_OF_CLUSTERS>	aInitCentroids;
-	std::tm															tStartOfExecution;
+	int																i4IterationsNum;		// Number of iterations
+	bool															bConvergenceAchieved;	// Flag indicating if convergence was achieved
+	std::vector<double>												vecPurity;				// Purity of the clusters	
+	std::vector<std::vector<double>>								vecInitCentroids;			// Initial centroids	
+	std::tm															tStartOfExecution;		// Start time of the execution
 };
