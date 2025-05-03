@@ -134,6 +134,7 @@ bool c_KMeans::bReadData()
 
 	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
 
+	in.close();
 	return true;
 }
 
@@ -414,6 +415,7 @@ void c_KMeans::LogProtocol()
     }
 
 	out<<"\n=== K-Means Clustering Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
 	out<<"Execution started at:\t"<< std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Execution ended at:\t\t"<< std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Initial centroids:\n";
