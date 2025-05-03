@@ -21,4 +21,7 @@ Recently, I started learning the basics of machine learning and wanted to apply 
 The classification of music genres is subjective! There are no strict rules that define clear borders between two pieces of music from different genres. However, we have some basic divisions created by fans and listeners, such as rock, metal, hip hop, rap, etc.   
 For research purposes, I will use classifications from Wikipedia as well as my own experience as a music enthusiast. Over the past six years, I’ve recorded details of more than 300 albums in my personal Excel table — and I’m still adding to it. 
 
+### Project's progress
+The Purity value by segmentation strategy and methods as of 03.05.2025:
 
+![Plot](/stats/20250503.png)
