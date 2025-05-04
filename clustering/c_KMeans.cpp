@@ -184,12 +184,18 @@ bool c_KMeans::bInitCentroids()
     }
 #else	// random initialization
 	FindMFCCsBounds();
+	m_vecCentroids.resize(NUM_OF_CLUSTERS);
+	m_sLog.vecInitCentroids.resize(NUM_OF_CLUSTERS);
 	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
 	{
+		m_vecCentroids[c].resize(NUM_OF_FEATURES);
+		m_sLog.vecInitCentroids[c].resize(NUM_OF_FEATURES);
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
 		{
+			// Generate random value between min and max
 			std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-			m_vecCentroids[c][d] = m_sLog.aInitCentroids[c][d] = dist(gen);
+			// Assign random value to centroid
+			m_vecCentroids[c][d] = m_sLog.vecInitCentroids[c][d] = dist(gen);
 		}
 	}
 #endif	//D2_SAMPLING
@@ -415,7 +421,7 @@ void c_KMeans::LogProtocol()
     }
 
 	out<<"\n=== K-Means Clustering Algorithm ===\n";
-	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out<<"Source file:\t\t\t" << SRC_FILE << "\n";
 	out<<"Execution started at:\t"<< std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Execution ended at:\t\t"<< std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Initial centroids:\n";
