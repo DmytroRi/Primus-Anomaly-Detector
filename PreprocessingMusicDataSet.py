@@ -7,6 +7,7 @@ import numpy as np
 DATASET_PATH = "music_data/src/"
 JSON_PATH = "computed_data/primus_data_mean.json"
 SAMPLE_RATE = 25050
+SILENCE_DETECTOR = -1131.37097      # Value of the first MFCC if the segment is silent
 
 def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15, take_mean=False):
     print("Execution of save_mfcc function has started.\n")
@@ -67,6 +68,12 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
                         # Aggregate MFCCs by taking the mean across time frames, yielding a 13-dimensional vector
                         mfcc = np.mean(mfcc, axis=1)
                     
+                    # Slip silent segemts 
+                    if mfcc[0] == SILENCE_DETECTOR:
+                        print(f"Segment {seg_idx} in file {file_path} is silent (MFCC[0]={SILENCE_DETECTOR}), skipping.")
+                        num_of_segments -= 1
+                        continue
+
                     # Save MFCCs for this segment using the segment index as key
                     song_data[str(seg_idx)] = mfcc.tolist()
                 

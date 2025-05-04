@@ -1,19 +1,28 @@
 -------------------------------------------
+TOTAL (15 seconds)
+Total duration of tracks: 144387.9431137725 seconds.
+Total amount of segments: 9377.
+Segments duration: 15 seconds.
+Total effective duration: 140655 seconds.
+Retention rate: 97.41464347142124%.
+-------------------------------------------
+
+-------------------------------------------
 TOTAL (5 seconds)
-Total duration of tracks: 145912.75277445107 seconds.
-Total amount of segments: 28945.
+Total duration of tracks: 144387.9431137725 seconds.
+Total amount of segments: 28641.
 Segments duration: 5 seconds.
-Total effective duration: 144725 seconds. (40 hours, 12 minutes and 05 seconds)
-Retention rate: 99.1859842598631%.
+Total effective duration: 143205 seconds.
+Retention rate: 99.18071891027607%.
 -------------------------------------------
 
 -------------------------------------------
 TOTAL (1 second)
-Total duration of tracks: 145587.54311377244 seconds.
-Total amount of segments: 145342.
+Total duration of tracks: 144387.9431137725 seconds.
+Total amount of segments: 143986.
 Segments duration: 1 seconds.
-Total effective duration: 145342 seconds.
-Retention rate: 99.83134332201722%.
+Total effective duration: 143986 seconds.
+Retention rate: 99.72162279958808%.
 -------------------------------------------
 
 -------------------------------------------
