@@ -500,7 +500,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 double c_KMeans::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
 {
 	double f8Sum{0};
-	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
 	{
 		double dist {a[i]-b[i]};
 		f8Sum += dist*dist;
