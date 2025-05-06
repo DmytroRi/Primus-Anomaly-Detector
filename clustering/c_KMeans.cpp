@@ -503,7 +503,12 @@ double c_KMeans::f8CalculateEuclideanDistance(const std::vector<double> & a, con
 	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
 	{
 		double dist {a[i]-b[i]};
-		f8Sum += dist*dist;
+#ifdef WEIGHTED_MFCCS
+		i < NUM_OF_MFCCS ? f8Sum += dist * dist * aWeightsMFCCs[i]
+					     : f8Sum += dist * dist;
+#else
+		f8Sum += dist * dist;
+#endif // WEIGHTED_MFCCS
 	}
 	if(isSqrt)
 		return sqrt(f8Sum);
