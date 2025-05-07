@@ -10,6 +10,228 @@ c_AlgorithmBase::c_AlgorithmBase()
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
 {}
 
+bool c_AlgorithmBase::bReadData()
+{
+	std::cout<<"Loading data from dataset...\n";
+
+	std::ifstream in{SRC_FILE};
+	if (!in.is_open())
+	{
+		std::cout<<"Failed to open '"<< SRC_FILE<< "'.\n";
+		return false;
+	}
+
+    json j; 
+    in >> j;
+
+	for (auto const & [genreName, songsObj] : j.items())
+	{
+		for (auto const & [songName, segmentsObj] : songsObj.items())
+		{
+			s_Song sSong;
+			sSong.eGenre = eStrGenreToEnum(genreName);
+			sSong.strName = songName;
+			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
+			sSong.bWasChanged = false;
+
+			for (auto const& [segKey, mfccArr] : segmentsObj.items())
+			{
+                if (!mfccArr.is_array() || mfccArr.size() != NUM_OF_MFCCS)
+				{
+					std::cout << "Expected 13-element array for " << genreName << "/" << songName << "/" << segKey;
+					return false;
+				}
+
+				std::array<double,NUM_OF_MFCCS> mfcc;
+				for (int i {0}; i < NUM_OF_MFCCS; i++)
+                    mfcc[i] = mfccArr[i].get<double>();
+
+				sSong.vecSegments.push_back(mfcc);
+			}
+
+			m_vecDataSet.push_back(std::move(sSong));
+		}
+	}
+
+	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
+
+	in.close();
+	return true;
+}
+
+bool c_AlgorithmBase::bWriteData() const
+{
+	nlohmann::json j;
+    for (auto const& song : m_vecDataSet)
+	{
+        j[std::to_string(song.i4Centroid)].push_back({
+            {"name ",  song.strName},
+            {"genre", sEnumGenreToStr(song.eGenre)}
+        });
+    }
+	std::ofstream(RES_FILE) << j.dump(2);
+	return true;
+}
+
+double c_AlgorithmBase::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
+{
+	double f8Sum{0};
+	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
+	{
+		double dist {a[i]-b[i]};
+#ifdef WEIGHTED_MFCCS
+		i < NUM_OF_MFCCS ? f8Sum += dist * dist * aWeightsMFCCs[i]
+					     : f8Sum += dist * dist;
+#else
+		f8Sum += dist * dist;
+#endif // WEIGHTED_MFCCS
+	}
+	if(isSqrt)
+		return sqrt(f8Sum);
+	return f8Sum;
+}
+
+void c_AlgorithmBase::NormalizeDataZScore()
+{
+	size_t i4NumOfSegments{ 0 };
+	for (auto const & song : m_vecDataSet)
+		i4NumOfSegments += song.vecSegments.size();
+
+	std::array<double, NUM_OF_MFCCS> aSum{};
+	aSum.fill(0.0);
+	std::array<double, NUM_OF_MFCCS> aSumPow2{};
+	aSumPow2.fill(0.0);
+
+	for (auto const & song : m_vecDataSet)
+		for (auto const & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+			{
+				aSum[i] += mfcc[i];
+				aSumPow2[i] += mfcc[i] * mfcc[i];
+			}
+
+	std::array<double, NUM_OF_MFCCS> aMean{};
+	std::array<double, NUM_OF_MFCCS> aStdDev{};
+	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	{
+		aMean[i] = aSum[i] / static_cast<double>(i4NumOfSegments);
+		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
+	}
+
+	// Normalize and save the MFCCs
+	for (auto & song : m_vecDataSet)
+		for (auto & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+				if (aStdDev[i] != 0.0)
+					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
+				else
+					mfcc[i] = 0.0;
+
+	// Save the normalized MFCCs to the extended features vector
+	for (auto & song : m_vecDataSet)
+			for (auto const & mfcc : song.vecSegments)
+			{
+				song.vecFeatures.push_back({mfcc[0], mfcc[1], mfcc[2],mfcc[3],
+											mfcc[4], mfcc[5], mfcc[6],mfcc[7],
+											mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12],});
+			}
+
+	return;
+}
+
+void c_AlgorithmBase::CalculateDeltaAndDeltaDelta()
+{
+	for (auto & song : m_vecDataSet)
+	{
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
+
+		auto & M {song.vecSegments};
+		size_t N {song.vecSegments.size()};
+
+		// Resize delta and delta-delta vectors
+		vecDelta.resize(N);
+		vecDeltaDelta.resize(N);
+
+		// Compute delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1 {i == 0 ? 0 : i - 1};
+			int ip1 {i + 1 < N ? i + 1 : i};
+            for (int d = 0; d < NUM_OF_MFCCS; ++d)
+                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
+        }
+
+		// Compute delta-delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1{ i == 0 ? 0 : i - 1 };
+			int ip1{ i + 1 < N ? i + 1 : i };
+			for (int d = 0; d < NUM_OF_MFCCS; ++d)
+				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
+		}
+
+		// Append delta and delta-delta coefficients to the features
+		for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDelta[i][j]);
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDeltaDelta[i][j]);
+		}
+
+	}
+	return;
+}
+
+std::tm c_AlgorithmBase::GetCurrentTime() const
+{
+	auto now   = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_t);							// convert to local time zone
+	return now_tm;
+}
+
+std::string c_AlgorithmBase::sEnumGenreToStr(const e_Genres & eGenre) const
+{
+	switch (eGenre)
+	{
+	case e_Genres::ALTERNATIVE_METAL:	return "Alternative metal";
+	case e_Genres::BLACK_METAL:			return "Black metal";
+	case e_Genres::DEATH_METAL:			return "Death metal";
+	case e_Genres::CLASSIC_HEAVY_METAL:	return "Classic heavy metal";
+	case e_Genres::HARD_ROCK:			return "Hard rock";
+	case e_Genres::NU_METAL:			return "Nu metal";
+	case e_Genres::THRASH_METAL:		return "Thrash metal";
+	case e_Genres::PRIMUS:				return "Primus";
+
+	default:							return "Undefined";
+	}
+}
+
+e_Genres c_AlgorithmBase::eStrGenreToEnum(const std::string & sGenre) const
+{
+	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
+		return e_Genres::ALTERNATIVE_METAL;
+	else if(sGenre == "Black metal" || sGenre == "black_metal")
+		return e_Genres::BLACK_METAL;
+	else if(sGenre == "Death metal" || sGenre == "death_metal")
+		return e_Genres::DEATH_METAL;
+	else if(sGenre == "Classic heavy metal" || sGenre == "classic_heavy_metal")
+		return e_Genres::CLASSIC_HEAVY_METAL;
+	else if(sGenre == "Hard rock" || sGenre == "hard_rock")
+		return e_Genres::HARD_ROCK;
+	else if(sGenre == "Nu metal" || sGenre == "nu_metal")
+		return e_Genres::NU_METAL;
+	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
+		return e_Genres::THRASH_METAL;
+	else if(sGenre == "Primus" || sGenre == "primus")
+		return e_Genres::PRIMUS;
+	else
+		return e_Genres::UNDEFINED;
+}
+
 c_KMeans::c_KMeans()
 :	c_AlgorithmBase()
 {
@@ -93,54 +315,7 @@ void c_KMeans::RunAlgorithm()
 	}
 }
 
-bool c_AlgorithmBase::bReadData()
-{
-	std::cout<<"Loading data from dataset...\n";
 
-	std::ifstream in{SRC_FILE};
-	if (!in.is_open())
-	{
-		std::cout<<"Failed to open '"<< SRC_FILE<< "'.\n";
-		return false;
-	}
-
-    json j; 
-    in >> j;
-
-	for (auto const & [genreName, songsObj] : j.items())
-	{
-		for (auto const & [songName, segmentsObj] : songsObj.items())
-		{
-			s_Song sSong;
-			sSong.eGenre = eStrGenreToEnum(genreName);
-			sSong.strName = songName;
-			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
-			sSong.bWasChanged = false;
-
-			for (auto const& [segKey, mfccArr] : segmentsObj.items())
-			{
-                if (!mfccArr.is_array() || mfccArr.size() != NUM_OF_MFCCS)
-				{
-					std::cout << "Expected 13-element array for " << genreName << "/" << songName << "/" << segKey;
-					return false;
-				}
-
-				std::array<double,NUM_OF_MFCCS> mfcc;
-				for (int i {0}; i < NUM_OF_MFCCS; i++)
-                    mfcc[i] = mfccArr[i].get<double>();
-
-				sSong.vecSegments.push_back(mfcc);
-			}
-
-			m_vecDataSet.push_back(std::move(sSong));
-		}
-	}
-
-	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
-
-	in.close();
-	return true;
-}
 
 bool c_KMeans::bInitCentroids()
 {
@@ -281,20 +456,6 @@ bool c_KMeans::bCalculateCenters()
 	return true;
 }
 
-bool c_AlgorithmBase::bWriteData() const
-{
-	nlohmann::json j;
-    for (auto const& song : m_vecDataSet)
-	{
-        j[std::to_string(song.i4Centroid)].push_back({
-            {"name ",  song.strName},
-            {"genre", sEnumGenreToStr(song.eGenre)}
-        });
-    }
-	std::ofstream(RES_FILE) << j.dump(2);
-	return true;
-}
-
 bool c_KMeans::bIsConvergenceAchieved() const
 {
 	for (auto const & song : m_vecDataSet)
@@ -318,99 +479,6 @@ void c_KMeans::FindMFCCsBounds()
 			}
 		}
 	}
-}
-
-void c_AlgorithmBase::NormalizeDataZScore()
-{
-	size_t i4NumOfSegments{ 0 };
-	for (auto const & song : m_vecDataSet)
-		i4NumOfSegments += song.vecSegments.size();
-
-	std::array<double, NUM_OF_MFCCS> aSum{};
-	aSum.fill(0.0);
-	std::array<double, NUM_OF_MFCCS> aSumPow2{};
-	aSumPow2.fill(0.0);
-
-	for (auto const & song : m_vecDataSet)
-		for (auto const & mfcc : song.vecSegments)
-			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-			{
-				aSum[i] += mfcc[i];
-				aSumPow2[i] += mfcc[i] * mfcc[i];
-			}
-
-	std::array<double, NUM_OF_MFCCS> aMean{};
-	std::array<double, NUM_OF_MFCCS> aStdDev{};
-	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-	{
-		aMean[i] = aSum[i] / static_cast<double>(i4NumOfSegments);
-		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
-	}
-
-	// Normalize and save the MFCCs
-	for (auto & song : m_vecDataSet)
-		for (auto & mfcc : song.vecSegments)
-			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-				if (aStdDev[i] != 0.0)
-					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
-				else
-					mfcc[i] = 0.0;
-
-	// Save the normalized MFCCs to the extended features vector
-	for (auto & song : m_vecDataSet)
-			for (auto const & mfcc : song.vecSegments)
-			{
-				song.vecFeatures.push_back({mfcc[0], mfcc[1], mfcc[2],mfcc[3],
-											mfcc[4], mfcc[5], mfcc[6],mfcc[7],
-											mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12],});
-			}
-
-	return;
-}
-
-void c_AlgorithmBase::CalculateDeltaAndDeltaDelta()
-{
-	for (auto & song : m_vecDataSet)
-	{
-		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
-		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
-
-		auto & M {song.vecSegments};
-		size_t N {song.vecSegments.size()};
-
-		// Resize delta and delta-delta vectors
-		vecDelta.resize(N);
-		vecDeltaDelta.resize(N);
-
-		// Compute delta coefficients
-		for (int i = 0; i < N; ++i)
-		{
-			int im1 {i == 0 ? 0 : i - 1};
-			int ip1 {i + 1 < N ? i + 1 : i};
-            for (int d = 0; d < NUM_OF_MFCCS; ++d)
-                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
-        }
-
-		// Compute delta-delta coefficients
-		for (int i = 0; i < N; ++i)
-		{
-			int im1{ i == 0 ? 0 : i - 1 };
-			int ip1{ i + 1 < N ? i + 1 : i };
-			for (int d = 0; d < NUM_OF_MFCCS; ++d)
-				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
-		}
-
-		// Append delta and delta-delta coefficients to the features
-		for (int i = 0; i < N; ++i)
-		{
-			for (int j = 0; j < NUM_OF_MFCCS; ++j)
-				song.vecFeatures[i].push_back(vecDelta[i][j]);
-			for (int j = 0; j < NUM_OF_MFCCS; ++j)
-				song.vecFeatures[i].push_back(vecDeltaDelta[i][j]);
-		}
-
-	}
-	return;
 }
 
 void c_KMeans::LogProtocol()
@@ -462,63 +530,6 @@ void c_KMeans::LogProtocol()
 	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
-std::string c_AlgorithmBase::sEnumGenreToStr(const e_Genres & eGenre) const
-{
-	switch (eGenre)
-	{
-	case e_Genres::ALTERNATIVE_METAL:	return "Alternative metal";
-	case e_Genres::BLACK_METAL:			return "Black metal";
-	case e_Genres::DEATH_METAL:			return "Death metal";
-	case e_Genres::CLASSIC_HEAVY_METAL:	return "Classic heavy metal";
-	case e_Genres::HARD_ROCK:			return "Hard rock";
-	case e_Genres::NU_METAL:			return "Nu metal";
-	case e_Genres::THRASH_METAL:		return "Thrash metal";
-	case e_Genres::PRIMUS:				return "Primus";
-
-	default:							return "Undefined";
-	}
-}
-
-e_Genres c_AlgorithmBase::eStrGenreToEnum(const std::string & sGenre) const
-{
-	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
-		return e_Genres::ALTERNATIVE_METAL;
-	else if(sGenre == "Black metal" || sGenre == "black_metal")
-		return e_Genres::BLACK_METAL;
-	else if(sGenre == "Death metal" || sGenre == "death_metal")
-		return e_Genres::DEATH_METAL;
-	else if(sGenre == "Classic heavy metal" || sGenre == "classic_heavy_metal")
-		return e_Genres::CLASSIC_HEAVY_METAL;
-	else if(sGenre == "Hard rock" || sGenre == "hard_rock")
-		return e_Genres::HARD_ROCK;
-	else if(sGenre == "Nu metal" || sGenre == "nu_metal")
-		return e_Genres::NU_METAL;
-	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
-		return e_Genres::THRASH_METAL;
-	else if(sGenre == "Primus" || sGenre == "primus")
-		return e_Genres::PRIMUS;
-	else
-		return e_Genres::UNDEFINED;
-}
-
-double c_AlgorithmBase::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
-{
-	double f8Sum{0};
-	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
-	{
-		double dist {a[i]-b[i]};
-#ifdef WEIGHTED_MFCCS
-		i < NUM_OF_MFCCS ? f8Sum += dist * dist * aWeightsMFCCs[i]
-					     : f8Sum += dist * dist;
-#else
-		f8Sum += dist * dist;
-#endif // WEIGHTED_MFCCS
-	}
-	if(isSqrt)
-		return sqrt(f8Sum);
-	return f8Sum;
-}
-
 double c_KMeans::f8CalculatePurity() const
 {
 	std::array<std::array<size_t,NUM_OF_CLUSTERS>,NUM_OF_CLUSTERS> aCounts{};
@@ -543,11 +554,4 @@ double c_KMeans::f8CalculatePurity() const
 	return static_cast<double>(i4Total) / m_vecDataSet.size();
 }
 
-std::tm c_AlgorithmBase::GetCurrentTime() const
-{
-	auto now   = std::chrono::system_clock::now();
-    auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
-    std::tm now_tm;
-    localtime_s(&now_tm, &now_t);							// convert to local time zone
-	return now_tm;
-}
+
