@@ -5,9 +5,13 @@
 #include "c_KMeans.h"
 #include "constants.h"
 
-c_KMeans::c_KMeans()
+c_AlgorithmBase::c_AlgorithmBase()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
+{}
+
+c_KMeans::c_KMeans()
+:	c_AlgorithmBase()
 {
 	m_aMaxMFCC.fill(std::numeric_limits<double>::lowest());
 	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
@@ -89,7 +93,7 @@ void c_KMeans::RunAlgorithm()
 	}
 }
 
-bool c_KMeans::bReadData()
+bool c_AlgorithmBase::bReadData()
 {
 	std::cout<<"Loading data from dataset...\n";
 
@@ -277,7 +281,7 @@ bool c_KMeans::bCalculateCenters()
 	return true;
 }
 
-bool c_KMeans::bWriteData() const
+bool c_AlgorithmBase::bWriteData() const
 {
 	nlohmann::json j;
     for (auto const& song : m_vecDataSet)
@@ -316,7 +320,7 @@ void c_KMeans::FindMFCCsBounds()
 	}
 }
 
-void c_KMeans::NormalizeDataZScore()
+void c_AlgorithmBase::NormalizeDataZScore()
 {
 	size_t i4NumOfSegments{ 0 };
 	for (auto const & song : m_vecDataSet)
@@ -364,7 +368,7 @@ void c_KMeans::NormalizeDataZScore()
 	return;
 }
 
-void c_KMeans::CalculateDeltaAndDeltaDelta()
+void c_AlgorithmBase::CalculateDeltaAndDeltaDelta()
 {
 	for (auto & song : m_vecDataSet)
 	{
@@ -458,7 +462,7 @@ void c_KMeans::LogProtocol()
 	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
-std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
+std::string c_AlgorithmBase::sEnumGenreToStr(const e_Genres & eGenre) const
 {
 	switch (eGenre)
 	{
@@ -475,7 +479,7 @@ std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
 	}
 }
 
-e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
+e_Genres c_AlgorithmBase::eStrGenreToEnum(const std::string & sGenre) const
 {
 	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
 		return e_Genres::ALTERNATIVE_METAL;
@@ -497,7 +501,7 @@ e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
 		return e_Genres::UNDEFINED;
 }
 
-double c_KMeans::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
+double c_AlgorithmBase::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
 {
 	double f8Sum{0};
 	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
@@ -539,7 +543,7 @@ double c_KMeans::f8CalculatePurity() const
 	return static_cast<double>(i4Total) / m_vecDataSet.size();
 }
 
-std::tm c_KMeans::GetCurrentTime() const
+std::tm c_AlgorithmBase::GetCurrentTime() const
 {
 	auto now   = std::chrono::system_clock::now();
     auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
