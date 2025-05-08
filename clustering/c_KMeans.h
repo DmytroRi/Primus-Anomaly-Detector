@@ -76,4 +76,8 @@ public:
 private:
 	void splitDataSet();
 
+
+	double								m_f8TrainRatio{};
+	std::vector<std::vector<double>>	m_vecTrainSet{};
+	std::vector<std::vector<double>>	m_vecTestSet{};
 };

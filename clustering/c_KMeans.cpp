@@ -551,4 +551,26 @@ double c_KMeans::f8CalculatePurity() const
 
 c_KNN::c_KNN()
 :	c_AlgorithmBase()
-{}
+,	m_f8TrainRatio{ TRAIN_RATIO }
+{
+}
+
+void c_KNN::RunAlgorithm()
+{
+	splitDataSet();
+}
+
+void c_KNN::splitDataSet()
+{
+	std::cout << "Splitting dataset into training and testing sets...\n";
+	std::vector<s_Song> vecShuffled{m_vecDataSet};
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::shuffle(vecShuffled.begin(), vecShuffled.end(), gen);
+
+	size_t i4TrainSize = static_cast<size_t>(vecShuffled.size() * m_f8TrainRatio);
+
+	m_vecTrainSet.assign(vecShuffled.begin(), vecShuffled.begin() + i4TrainSize);
+	m_vecTestSet.assign(vecShuffled.begin() + i4TrainSize, vecShuffled.end());
+}

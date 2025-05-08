@@ -16,6 +16,7 @@ using json = nlohmann::json;
 #define LOG_FILE "Protocol.txt"			// Name of the logging file
 //#define EXTENDED_LOGGING				// Enable extended logging
 #define WEIGHTED_MFCCS					// Enable weighted MFCCs
+#define TRAIN_RATIO 0.8					// Ratio of training data to total data
 
 // Weights for MFCCs
 constexpr std::array<double, NUM_OF_MFCCS> aWeightsMFCCs{
