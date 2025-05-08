@@ -74,10 +74,12 @@ public:
 	void			RunAlgorithm();
 
 private:
-	void splitDataSet();
+	void			splitDataSet();
+	void			predictAll();
+	e_Genres		predict(const std::vector<double> & song);
 
 
 	double								m_f8TrainRatio{};
-	std::vector<std::vector<double>>	m_vecTrainSet{};
-	std::vector<std::vector<double>>	m_vecTestSet{};
+	std::vector<s_Song>					m_vecTrainSet{};
+	std::vector<s_Song>					m_vecTestSet{};
 };

@@ -557,6 +557,21 @@ c_KNN::c_KNN()
 
 void c_KNN::RunAlgorithm()
 {
+	m_sLog.tStartOfExecution = GetCurrentTime();
+	std::cout<<"Start of the k-nearest neighbors Algorithm...\n";
+	
+	if(bReadData())
+		std::cout<<"Dataset successfully loaded.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Failed to load the dataset. Terminating program.\n";
+	}
+
+
+	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
+
 	splitDataSet();
 }
 
@@ -573,4 +588,69 @@ void c_KNN::splitDataSet()
 
 	m_vecTrainSet.assign(vecShuffled.begin(), vecShuffled.begin() + i4TrainSize);
 	m_vecTestSet.assign(vecShuffled.begin() + i4TrainSize, vecShuffled.end());
+}
+
+void c_KNN::predictAll()
+{
+	std::vector<e_Genres> vecPredictions{};
+
+	for (auto const& song : m_vecTrainSet) {
+        e_Genres pred = predict(song);
+        vecPredictions.push_back(pred);
+    }
+}
+
+e_Genres c_KNN::predict(const s_Song & song)
+{
+	// Calculate the mean of the requested song
+	std::vector<double> vecSongMean(NUM_OF_FEATURES, 0.0);
+	for (auto const & seg : song.vecFeatures)
+		for (size_t d = 0; d < NUM_OF_FEATURES; ++d)
+			vecSongMean[d] += seg[d];
+
+	double invQ = 1.0 / static_cast<double>(song.vecFeatures.size());
+	for (size_t d = 0; d < NUM_OF_FEATURES; ++d) vecSongMean[d] *= invQ;
+
+	// Calculate distances to all training songs
+	std::vector<std::pair<double, e_Genres>> distances;
+	for (auto const & trainSong : m_vecTrainSet)
+	{
+		// Calculate the mean of the training song
+		std::vector<double> vecTrainSongMean(NUM_OF_FEATURES, 0.0);
+		for (auto const & seg : trainSong.vecFeatures)
+			for (size_t d = 0; d < NUM_OF_FEATURES; ++d)
+				vecTrainSongMean[d] += seg[d];
+
+		double invQ = 1.0 / static_cast<double>(trainSong.vecFeatures.size());
+		for (size_t d = 0; d < NUM_OF_FEATURES; ++d) vecTrainSongMean[d] *= invQ;
+
+		// Calculate the distance
+		double distance = f8CalculateEuclideanDistance(vecSongMean, vecTrainSongMean);
+		distances.emplace_back(distance, trainSong.eGenre);
+	}
+
+	// Sort distances
+	if (NEIGHBOUR_COUNT < distances.size())
+	{
+		std::nth_element(
+			distances.begin(),
+			distances.begin() + NEIGHBOUR_COUNT,
+			distances.end(),
+			[](auto & a, auto & b) { return a.first < b.first; }
+		);
+	}
+
+	std::array<size_t, NUM_OF_CLUSTERS> votes{};
+	votes.fill(0);
+	size_t limit = std::min(static_cast<size_t>(NEIGHBOUR_COUNT), distances.size());
+	for (size_t i = 0; i < limit; ++i)
+		votes[static_cast<int>(distances[i].second)]++;
+
+	// Find the genre with the most votes
+	int bestIdx = std::distance(
+		votes.begin(),
+		std::max_element(votes.begin(), votes.end())
+	);
+
+	return static_cast<e_Genres>(bestIdx);
 }
