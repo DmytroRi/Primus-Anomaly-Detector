@@ -39,7 +39,7 @@ class c_KMeans : public c_AlgorithmBase
 {
 public:
 	c_KMeans();
-	~c_KMeans();
+	~c_KMeans() = default;
 
 	void			RunAlgorithm();
 
@@ -65,3 +65,15 @@ private:
 	std::vector<std::vector<double>>	m_vecCentroids{};
 };
 
+class c_KNN : public c_AlgorithmBase
+{
+public:
+	c_KNN();
+	~c_KNN() = default;
+
+	void			RunAlgorithm();
+
+private:
+	void splitDataSet();
+
+};

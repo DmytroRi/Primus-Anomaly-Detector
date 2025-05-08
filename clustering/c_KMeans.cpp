@@ -239,11 +239,6 @@ c_KMeans::c_KMeans()
 	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
 }
 
-c_KMeans::~c_KMeans()
-{
-
-}
-
 void c_KMeans::RunAlgorithm()
 {
 	m_sLog.tStartOfExecution = GetCurrentTime();
@@ -554,4 +549,6 @@ double c_KMeans::f8CalculatePurity() const
 	return static_cast<double>(i4Total) / m_vecDataSet.size();
 }
 
-
+c_KNN::c_KNN()
+:	c_AlgorithmBase()
+{}
