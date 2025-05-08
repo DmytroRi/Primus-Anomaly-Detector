@@ -76,7 +76,7 @@ public:
 private:
 	void			splitDataSet();
 	void			predictAll();
-	e_Genres		predict(const std::vector<double> & song);
+	e_Genres		predict(const s_Song & song);
 
 
 	double								m_f8TrainRatio{};
