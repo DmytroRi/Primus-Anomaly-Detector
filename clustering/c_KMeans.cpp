@@ -677,6 +677,29 @@ e_Genres c_KNN::predict(const s_Song & song)
 	return static_cast<e_Genres>(i8BestIdx);
 }
 
+void c_KNN::LogProtocol()
+{
+	std::tm end{ GetCurrentTime() };
+
+	std::ofstream out{ LOG_FILE, std::ios::app };
+	if (!out)
+	{
+		std::cout << "Error: could not open " << LOG_FILE << " for logging\n";
+		return;
+	}
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Execution started at:\t" << std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Execution ended at:\t\t" << std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Value of k:\t\t\t" << NEIGHBOUR_COUNT << "\n";
+	out << "Achieved purity:\t\t" << std::fixed << std::setprecision(4) << m_sLog.vecPurity[0] << "\n";
+	out << "====================================\n";
+
+	out.close();
+	std::cout << "Log saved to " << LOG_FILE << ".\n";
+}
+
 double c_KNN::f8CalculatePurity() const
 {
 	if (m_vecTrainSet.empty())

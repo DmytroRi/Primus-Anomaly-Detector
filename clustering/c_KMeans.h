@@ -79,6 +79,8 @@ private:
 	void			predictAll();
 	e_Genres		predict(const s_Song & song);
 
+	void			LogProtocol();
+
 	double			f8CalculatePurity() const;
 
 
