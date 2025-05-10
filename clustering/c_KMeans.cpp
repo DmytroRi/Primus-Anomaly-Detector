@@ -584,7 +584,12 @@ void c_KNN::RunAlgorithm()
 	if (m_bTerminated)
 		return;
 
+	// Predict the genres of the songs in the training set
+	predictAll();
+	std::cout << "Predictions completed.\n";
 
+	// Calculate the purity of the training set
+	m_sLog.vecPurity.push_back(f8CalculatePurity());
 }
 
 bool c_KNN::splitDataSet()
@@ -609,11 +614,11 @@ bool c_KNN::splitDataSet()
 
 void c_KNN::predictAll()
 {
-	std::vector<e_Genres> vecPredictions{};
+	std::cout << "Predicting genres for the training set...\n";
 
 	for (auto const& song : m_vecTrainSet) {
         e_Genres pred = predict(song);
-        vecPredictions.push_back(pred);
+        m_vecPredictions.push_back(pred);
     }
 }
 
@@ -664,10 +669,25 @@ e_Genres c_KNN::predict(const s_Song & song)
 		votes[static_cast<int>(distances[i].second)]++;
 
 	// Find the genre with the most votes
-	long long bestIdx = std::distance(
+	long long i8BestIdx = std::distance(
 		votes.begin(),
 		std::max_element(votes.begin(), votes.end())
 	);
 
-	return static_cast<e_Genres>(bestIdx);
+	return static_cast<e_Genres>(i8BestIdx);
+}
+
+double c_KNN::f8CalculatePurity() const
+{
+	if (m_vecTrainSet.empty())
+		return 0.0;
+
+	int i4CorrectPredictions{ 0 };
+	for (size_t i{ 0 }; i < m_vecTrainSet.size(); i++)
+	{
+		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
+			i4CorrectPredictions++;
+	}
+
+	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
 }
