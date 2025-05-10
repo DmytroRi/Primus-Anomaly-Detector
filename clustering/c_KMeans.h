@@ -74,7 +74,7 @@ public:
 	void			RunAlgorithm();
 
 private:
-	void			splitDataSet();
+	bool			splitDataSet();
 	void			predictAll();
 	e_Genres		predict(const s_Song & song);
 

@@ -568,14 +568,26 @@ void c_KNN::RunAlgorithm()
 		std::cout<<"Failed to load the dataset. Terminating program.\n";
 	}
 
-
+	// Preapare the features
 	NormalizeDataZScore();
 	CalculateDeltaAndDeltaDelta();
 
-	splitDataSet();
+	// Split the dataset into training and testing sets
+	if(splitDataSet())
+		std::cout << "Dataset successfully split into training and testing sets.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout << "Failed to split the dataset. Terminating program.\n";
+	}
+
+	if (m_bTerminated)
+		return;
+
+
 }
 
-void c_KNN::splitDataSet()
+bool c_KNN::splitDataSet()
 {
 	std::cout << "Splitting dataset into training and testing sets...\n";
 	std::vector<s_Song> vecShuffled{m_vecDataSet};
@@ -588,6 +600,11 @@ void c_KNN::splitDataSet()
 
 	m_vecTrainSet.assign(vecShuffled.begin(), vecShuffled.begin() + i4TrainSize);
 	m_vecTestSet.assign(vecShuffled.begin() + i4TrainSize, vecShuffled.end());
+
+	if (m_vecTrainSet.empty() || m_vecTestSet.empty())
+		return false;
+
+	return true;
 }
 
 void c_KNN::predictAll()
@@ -647,7 +664,7 @@ e_Genres c_KNN::predict(const s_Song & song)
 		votes[static_cast<int>(distances[i].second)]++;
 
 	// Find the genre with the most votes
-	int bestIdx = std::distance(
+	long long bestIdx = std::distance(
 		votes.begin(),
 		std::max_element(votes.begin(), votes.end())
 	);
