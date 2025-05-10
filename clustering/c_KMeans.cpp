@@ -590,6 +590,11 @@ void c_KNN::RunAlgorithm()
 
 	// Calculate the purity of the training set
 	m_sLog.vecPurity.push_back(f8CalculatePurity());
+
+	// Log the results
+	LogProtocol();
+
+	return;
 }
 
 bool c_KNN::splitDataSet()
@@ -692,7 +697,7 @@ void c_KNN::LogProtocol()
 	out << "Source file:\t\t\t" << SRC_FILE << "\n";
 	out << "Execution started at:\t" << std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
 	out << "Execution ended at:\t\t" << std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
-	out << "Value of k:\t\t\t" << NEIGHBOUR_COUNT << "\n";
+	out << "Value of k:\t\t\t\t" << NEIGHBOUR_COUNT << "\n";
 	out << "Achieved purity:\t\t" << std::fixed << std::setprecision(4) << m_sLog.vecPurity[0] << "\n";
 	out << "====================================\n";
 
