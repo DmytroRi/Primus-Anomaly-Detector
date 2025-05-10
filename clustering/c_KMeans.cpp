@@ -568,14 +568,36 @@ void c_KNN::RunAlgorithm()
 		std::cout<<"Failed to load the dataset. Terminating program.\n";
 	}
 
-
+	// Preapare the features
 	NormalizeDataZScore();
 	CalculateDeltaAndDeltaDelta();
 
-	splitDataSet();
+	// Split the dataset into training and testing sets
+	if(splitDataSet())
+		std::cout << "Dataset successfully split into training and testing sets.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout << "Failed to split the dataset. Terminating program.\n";
+	}
+
+	if (m_bTerminated)
+		return;
+
+	// Predict the genres of the songs in the training set
+	predictAll();
+	std::cout << "Predictions completed.\n";
+
+	// Calculate the purity of the training set
+	m_sLog.vecPurity.push_back(f8CalculatePurity());
+
+	// Log the results
+	LogProtocol();
+
+	return;
 }
 
-void c_KNN::splitDataSet()
+bool c_KNN::splitDataSet()
 {
 	std::cout << "Splitting dataset into training and testing sets...\n";
 	std::vector<s_Song> vecShuffled{m_vecDataSet};
@@ -588,15 +610,20 @@ void c_KNN::splitDataSet()
 
 	m_vecTrainSet.assign(vecShuffled.begin(), vecShuffled.begin() + i4TrainSize);
 	m_vecTestSet.assign(vecShuffled.begin() + i4TrainSize, vecShuffled.end());
+
+	if (m_vecTrainSet.empty() || m_vecTestSet.empty())
+		return false;
+
+	return true;
 }
 
 void c_KNN::predictAll()
 {
-	std::vector<e_Genres> vecPredictions{};
+	std::cout << "Predicting genres for the training set...\n";
 
 	for (auto const& song : m_vecTrainSet) {
         e_Genres pred = predict(song);
-        vecPredictions.push_back(pred);
+        m_vecPredictions.push_back(pred);
     }
 }
 
@@ -647,10 +674,48 @@ e_Genres c_KNN::predict(const s_Song & song)
 		votes[static_cast<int>(distances[i].second)]++;
 
 	// Find the genre with the most votes
-	int bestIdx = std::distance(
+	long long i8BestIdx = std::distance(
 		votes.begin(),
 		std::max_element(votes.begin(), votes.end())
 	);
 
-	return static_cast<e_Genres>(bestIdx);
+	return static_cast<e_Genres>(i8BestIdx);
+}
+
+void c_KNN::LogProtocol()
+{
+	std::tm end{ GetCurrentTime() };
+
+	std::ofstream out{ LOG_FILE, std::ios::app };
+	if (!out)
+	{
+		std::cout << "Error: could not open " << LOG_FILE << " for logging\n";
+		return;
+	}
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Execution started at:\t" << std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Execution ended at:\t\t" << std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Value of k:\t\t\t\t" << NEIGHBOUR_COUNT << "\n";
+	out << "Achieved purity:\t\t" << std::fixed << std::setprecision(4) << m_sLog.vecPurity[0] << "\n";
+	out << "====================================\n";
+
+	out.close();
+	std::cout << "Log saved to " << LOG_FILE << ".\n";
+}
+
+double c_KNN::f8CalculatePurity() const
+{
+	if (m_vecTrainSet.empty())
+		return 0.0;
+
+	int i4CorrectPredictions{ 0 };
+	for (size_t i{ 0 }; i < m_vecTrainSet.size(); i++)
+	{
+		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
+			i4CorrectPredictions++;
+	}
+
+	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
 }
