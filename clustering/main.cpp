@@ -33,7 +33,7 @@ std::vector				vec
 
 int main()
 {
-	c_KMeans cAlg;
+	c_KNN cAlg;
 	cAlg.RunAlgorithm();
 
 	return 0;
