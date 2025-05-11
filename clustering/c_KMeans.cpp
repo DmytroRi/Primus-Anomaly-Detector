@@ -621,25 +621,24 @@ void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
 {
 	std::cout << "Optimizing the value of k...\n";
 	std::vector<double> vecPurity;
-	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	for (int i4K {i4MinK}; i4K <= i4MaxK; i4K += i4Step)
 	{
-		NEIGHBOUR_COUNT = i4K;
-		predictAll();
+		predictAll(i4K);
 		vecPurity.push_back(f8CalculatePurity());
 	}
 }
 
-void c_KNN::predictAll()
+void c_KNN::predictAll(int i4Neighboor/*=0*/)
 {
 	std::cout << "Predicting genres for the training set...\n";
 
 	for (auto const& song : m_vecTrainSet) {
-        e_Genres pred = predict(song);
+        e_Genres pred = predict(song, i4Neighboor);
         m_vecPredictions.push_back(pred);
     }
 }
 
-e_Genres c_KNN::predict(const s_Song & song)
+e_Genres c_KNN::predict(const s_Song & song, int i4Neighboor)
 {
 	// Calculate the mean of the requested song
 	std::vector<double> vecSongMean(NUM_OF_FEATURES, 0.0);
@@ -668,12 +667,18 @@ e_Genres c_KNN::predict(const s_Song & song)
 		distances.emplace_back(distance, trainSong.eGenre);
 	}
 
+	// Choose the number of neighbors to consider
+	int i4NeighboorCount{NEIGHBOUR_COUNT};
+	if (i4Neighboor != NEIGHBOR_COUNT_DUMMY)
+		i4NeighboorCount = i4Neighboor;
+
+
 	// Sort distances
-	if (NEIGHBOUR_COUNT < distances.size())
+	if (i4NeighboorCount < distances.size())
 	{
 		std::nth_element(
 			distances.begin(),
-			distances.begin() + NEIGHBOUR_COUNT,
+			distances.begin() + i4NeighboorCount,
 			distances.end(),
 			[](auto & a, auto & b) { return a.first < b.first; }
 		);
@@ -681,7 +686,7 @@ e_Genres c_KNN::predict(const s_Song & song)
 
 	std::array<size_t, NUM_OF_CLUSTERS> votes{};
 	votes.fill(0);
-	size_t limit = std::min(static_cast<size_t>(NEIGHBOUR_COUNT), distances.size());
+	size_t limit = std::min(static_cast<size_t>(i4NeighboorCount), distances.size());
 	for (size_t i = 0; i < limit; ++i)
 		votes[static_cast<int>(distances[i].second)]++;
 

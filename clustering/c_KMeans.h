@@ -79,8 +79,8 @@ private:
 
 	void			optimizeValueK(int i4MaxK = 20, int i4MinK = 1, int i4Step = 1);
 
-	void			predictAll();
-	e_Genres		predict(const s_Song & song);
+	void			predictAll(int i4Neighboor = -1);
+	e_Genres		predict(const s_Song & song, int i4Neighboor);
 
 	void			LogProtocol();
 

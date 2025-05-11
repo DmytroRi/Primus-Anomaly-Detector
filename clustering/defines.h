@@ -13,3 +13,4 @@
 #define WEIGHTED_MFCCS					// Enable weighted MFCCs
 #define TRAIN_RATIO 0.8					// Ratio of training data to total data
 #define NEIGHBOUR_COUNT 15				// Number of neighbors for KNN algorithm
+#define NEIGHBOR_COUNT_DUMMY -1			// Dummy value for KNN algorithm
