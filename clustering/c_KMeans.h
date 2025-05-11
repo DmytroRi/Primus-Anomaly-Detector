@@ -26,7 +26,7 @@ protected:
 	std::tm				GetCurrentTime() const;
 	std::string			sEnumGenreToStr(const e_Genres & eGenre) const;
 	e_Genres			eStrGenreToEnum(const std::string & sGenre) const;
-	virtual double		f8CalculatePurity() const = 0;
+	virtual double		f8CalculatePurity() = 0;
 
 	// Data members
 	bool								m_bTerminated{};
@@ -74,15 +74,19 @@ public:
 
 	void			RunAlgorithm();
 
+	void			optimizeValueK(int i4MaxK = 20, int i4MinK = 1, int i4Step = 1);
+
 private:
 	bool			splitDataSet();
-	void			predictAll();
-	e_Genres		predict(const s_Song & song);
+
+	void			predictAll(int i4Neighboor = -1);
+	e_Genres		predict(const s_Song & song, int i4Neighboor);
 
 	void			LogProtocol();
 
-	double			f8CalculatePurity() const;
+	double			f8CalculatePurity();
 
+	void 			LogResearchResults(int i4MaxK = 20, int i4MinK = 1, int i4Step = 1);
 
 	double								m_f8TrainRatio{};
 	std::vector<s_Song>					m_vecTrainSet{};

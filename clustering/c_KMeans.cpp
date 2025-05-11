@@ -617,17 +617,47 @@ bool c_KNN::splitDataSet()
 	return true;
 }
 
-void c_KNN::predictAll()
+void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
+{
+	if (i4MaxK < i4MinK || i4Step <= 0)
+	{
+		std::cout << "Invalid range for k. Please check the values.\n";
+		return;
+	}
+
+	bReadData();
+	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
+	splitDataSet();
+	
+	std::cout << "Optimizing the value of k...\n";
+	for (int i4K {i4MinK}; i4K <= i4MaxK; i4K += i4Step)
+	{
+		predictAll(i4K);
+		m_sLog.vecPurity.push_back(f8CalculatePurity());
+	}
+
+	std::cout << "Purity values for different k:\n";
+	for (int i4K{ i4MinK }; i4K <= i4MaxK; i4K += i4Step)
+	{
+		std::cout << "k = " << i4K << ": " << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK] << "\n";
+	}
+
+	LogResearchResults();
+	return;
+}
+
+void c_KNN::predictAll(int i4Neighboor/*=0*/)
 {
 	std::cout << "Predicting genres for the training set...\n";
 
 	for (auto const& song : m_vecTrainSet) {
-        e_Genres pred = predict(song);
+        e_Genres pred = predict(song, i4Neighboor);
         m_vecPredictions.push_back(pred);
     }
 }
 
-e_Genres c_KNN::predict(const s_Song & song)
+e_Genres c_KNN::predict(const s_Song & song, int i4Neighboor)
 {
 	// Calculate the mean of the requested song
 	std::vector<double> vecSongMean(NUM_OF_FEATURES, 0.0);
@@ -656,12 +686,18 @@ e_Genres c_KNN::predict(const s_Song & song)
 		distances.emplace_back(distance, trainSong.eGenre);
 	}
 
+	// Choose the number of neighbors to consider
+	int i4NeighboorCount{NEIGHBOUR_COUNT};
+	if (i4Neighboor != NEIGHBOR_COUNT_DUMMY)
+		i4NeighboorCount = i4Neighboor;
+
+
 	// Sort distances
-	if (NEIGHBOUR_COUNT < distances.size())
+	if (i4NeighboorCount < distances.size())
 	{
 		std::nth_element(
 			distances.begin(),
-			distances.begin() + NEIGHBOUR_COUNT,
+			distances.begin() + i4NeighboorCount,
 			distances.end(),
 			[](auto & a, auto & b) { return a.first < b.first; }
 		);
@@ -669,7 +705,7 @@ e_Genres c_KNN::predict(const s_Song & song)
 
 	std::array<size_t, NUM_OF_CLUSTERS> votes{};
 	votes.fill(0);
-	size_t limit = std::min(static_cast<size_t>(NEIGHBOUR_COUNT), distances.size());
+	size_t limit = std::min(static_cast<size_t>(i4NeighboorCount), distances.size());
 	for (size_t i = 0; i < limit; ++i)
 		votes[static_cast<int>(distances[i].second)]++;
 
@@ -705,7 +741,7 @@ void c_KNN::LogProtocol()
 	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
-double c_KNN::f8CalculatePurity() const
+double c_KNN::f8CalculatePurity()
 {
 	if (m_vecTrainSet.empty())
 		return 0.0;
@@ -717,5 +753,37 @@ double c_KNN::f8CalculatePurity() const
 			i4CorrectPredictions++;
 	}
 
+	// Clear the predictions vector
+    m_vecPredictions.clear();
+
 	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
+}
+
+void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
+{
+	std::ofstream out{LOG_RESEARCH, std::ios::app};
+	if (!out)
+	{
+        std::cout << "Error: could not open " << LOG_RESEARCH << " for logging\n";
+        return;
+    }
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Values of k:\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << i4K;
+	}
+	out << "\n";
+	out << "Purity values: \t\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK];
+	}
+	out << "\n";
+	out << "====================================\n";
+	out.close();
+	std::cout << "Research results saved to " << LOG_RESEARCH << ".\n";
+	return;
 }
