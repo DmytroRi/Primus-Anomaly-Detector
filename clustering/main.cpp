@@ -34,7 +34,8 @@ std::vector				vec
 int main()
 {
 	c_KNN cAlg;
-	cAlg.RunAlgorithm();
+	cAlg.optimizeValueK(30, 1, 1);
+	//cAlg.RunAlgorithm();
 
 	return 0;
 }

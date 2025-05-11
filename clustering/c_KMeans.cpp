@@ -619,12 +619,29 @@ bool c_KNN::splitDataSet()
 
 void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
 {
+	if (i4MaxK < i4MinK || i4Step <= 0)
+	{
+		std::cout << "Invalid range for k. Please check the values.\n";
+		return;
+	}
+
+	bReadData();
+	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
+	splitDataSet();
+	
 	std::cout << "Optimizing the value of k...\n";
 	std::vector<double> vecPurity;
 	for (int i4K {i4MinK}; i4K <= i4MaxK; i4K += i4Step)
 	{
 		predictAll(i4K);
 		vecPurity.push_back(f8CalculatePurity());
+	}
+
+	std::cout << "Purity values for different k:\n";
+	for (int i4K{ i4MinK }; i4K <= i4MaxK; i4K += i4Step)
+	{
+		std::cout << "k = " << i4K << ": " << std::fixed << std::setprecision(4) << vecPurity[i4K - i4MinK] << "\n";
 	}
 }
 
@@ -722,7 +739,7 @@ void c_KNN::LogProtocol()
 	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
-double c_KNN::f8CalculatePurity() const
+double c_KNN::f8CalculatePurity()
 {
 	if (m_vecTrainSet.empty())
 		return 0.0;
@@ -733,6 +750,9 @@ double c_KNN::f8CalculatePurity() const
 		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
 			i4CorrectPredictions++;
 	}
+
+	// Clear the predictions vector
+    m_vecPredictions.clear();
 
 	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
 }
