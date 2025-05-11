@@ -631,18 +631,20 @@ void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
 	splitDataSet();
 	
 	std::cout << "Optimizing the value of k...\n";
-	std::vector<double> vecPurity;
 	for (int i4K {i4MinK}; i4K <= i4MaxK; i4K += i4Step)
 	{
 		predictAll(i4K);
-		vecPurity.push_back(f8CalculatePurity());
+		m_sLog.vecPurity.push_back(f8CalculatePurity());
 	}
 
 	std::cout << "Purity values for different k:\n";
 	for (int i4K{ i4MinK }; i4K <= i4MaxK; i4K += i4Step)
 	{
-		std::cout << "k = " << i4K << ": " << std::fixed << std::setprecision(4) << vecPurity[i4K - i4MinK] << "\n";
+		std::cout << "k = " << i4K << ": " << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK] << "\n";
 	}
+
+	LogResearchResults();
+	return;
 }
 
 void c_KNN::predictAll(int i4Neighboor/*=0*/)
@@ -755,4 +757,33 @@ double c_KNN::f8CalculatePurity()
     m_vecPredictions.clear();
 
 	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
+}
+
+void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
+{
+	std::ofstream out{LOG_RESEARCH, std::ios::app};
+	if (!out)
+	{
+        std::cout << "Error: could not open " << LOG_RESEARCH << " for logging\n";
+        return;
+    }
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Values of k:\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << i4K;
+	}
+	out << "\n";
+	out << "Purity values: \t\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK];
+	}
+	out << "\n";
+	out << "====================================\n";
+	out.close();
+	std::cout << "Research results saved to " << LOG_RESEARCH << ".\n";
+	return;
 }

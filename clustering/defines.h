@@ -9,6 +9,7 @@
 #define SRC_FILE "data_mean_1s.json"	// Name of the dataset file
 #define RES_FILE "RESULT.JSON"			// Name of the result file
 #define LOG_FILE "Protocol.txt"			// Name of the logging file
+#define LOG_RESEARCH "Research.txt"		// Name of the research logging file
 //#define EXTENDED_LOGGING				// Enable extended logging
 #define WEIGHTED_MFCCS					// Enable weighted MFCCs
 #define TRAIN_RATIO 0.8					// Ratio of training data to total data

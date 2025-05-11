@@ -86,6 +86,7 @@ private:
 
 	double			f8CalculatePurity();
 
+	void 			LogResearchResults(int i4MaxK = 20, int i4MinK = 1, int i4Step = 1);
 
 	double								m_f8TrainRatio{};
 	std::vector<s_Song>					m_vecTrainSet{};
