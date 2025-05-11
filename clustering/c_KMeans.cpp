@@ -617,6 +617,18 @@ bool c_KNN::splitDataSet()
 	return true;
 }
 
+void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
+{
+	std::cout << "Optimizing the value of k...\n";
+	std::vector<double> vecPurity;
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		NEIGHBOUR_COUNT = i4K;
+		predictAll();
+		vecPurity.push_back(f8CalculatePurity());
+	}
+}
+
 void c_KNN::predictAll()
 {
 	std::cout << "Predicting genres for the training set...\n";

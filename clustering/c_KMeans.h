@@ -76,6 +76,9 @@ public:
 
 private:
 	bool			splitDataSet();
+
+	void			optimizeValueK(int i4MaxK = 20, int i4MinK = 1, int i4Step = 1);
+
 	void			predictAll();
 	e_Genres		predict(const s_Song & song);
 
