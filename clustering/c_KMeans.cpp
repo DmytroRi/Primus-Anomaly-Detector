@@ -749,14 +749,14 @@ double c_KNN::f8CalculatePurity()
 	int i4CorrectPredictions{ 0 };
 	for (size_t i{ 0 }; i < m_vecTestSet.size(); i++)
 	{
-		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
+		if (m_vecTestSet[i].eGenre == m_vecPredictions[i])
 			i4CorrectPredictions++;
 	}
 
 	// Clear the predictions vector
     m_vecPredictions.clear();
 
-	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
+	return static_cast<double>(i4CorrectPredictions)/m_vecTestSet.size();
 }
 
 void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
