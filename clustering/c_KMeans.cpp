@@ -651,7 +651,7 @@ void c_KNN::predictAll(int i4Neighboor/*=0*/)
 {
 	std::cout << "Predicting genres for the training set...\n";
 
-	for (auto const& song : m_vecTrainSet) {
+	for (auto const& song : m_vecTestSet) {
         e_Genres pred = predict(song, i4Neighboor);
         m_vecPredictions.push_back(pred);
     }
@@ -747,16 +747,16 @@ double c_KNN::f8CalculatePurity()
 		return 0.0;
 
 	int i4CorrectPredictions{ 0 };
-	for (size_t i{ 0 }; i < m_vecTrainSet.size(); i++)
+	for (size_t i{ 0 }; i < m_vecTestSet.size(); i++)
 	{
-		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
+		if (m_vecTestSet[i].eGenre == m_vecPredictions[i])
 			i4CorrectPredictions++;
 	}
 
 	// Clear the predictions vector
     m_vecPredictions.clear();
 
-	return static_cast<double>(i4CorrectPredictions)/m_vecTrainSet.size();
+	return static_cast<double>(i4CorrectPredictions)/m_vecTestSet.size();
 }
 
 void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
@@ -770,7 +770,16 @@ void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
 
 	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
 	out << "Source file:\t\t\t" << SRC_FILE << "\n";
-	out << "Values of k:\t\t";
+	out << "Number of features:\t\t" << NUM_OF_FEATURES << "\n";
+	out << "Number of MFCCs:\t\t" << NUM_OF_MFCCS << "\n";
+	out << "Number of clusters:\t\t" << NUM_OF_CLUSTERS << "\n";
+	out << "Train ratio:\t\t\t" << m_f8TrainRatio << "\n";
+    #ifdef WEIGHTED_MFCCS
+    out << "Weighted MFCCs:\t\t\tYes\n";
+    #else
+    out << "Weighted MFCCs:\t\t\tNo\n";
+    #endif
+	out << "Results:\nValues of k:\t\t";
 	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
 	{
 		out << std::setw(8) << i4K;
