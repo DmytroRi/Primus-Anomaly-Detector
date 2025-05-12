@@ -770,6 +770,7 @@ void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
 
 	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
 	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Number of features:\t\t" << NUM_OF_FEATURES << "\n";
 	out << "Values of k:\t\t";
 	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
 	{
