@@ -651,7 +651,7 @@ void c_KNN::predictAll(int i4Neighboor/*=0*/)
 {
 	std::cout << "Predicting genres for the training set...\n";
 
-	for (auto const& song : m_vecTrainSet) {
+	for (auto const& song : m_vecTestSet) {
         e_Genres pred = predict(song, i4Neighboor);
         m_vecPredictions.push_back(pred);
     }
@@ -747,7 +747,7 @@ double c_KNN::f8CalculatePurity()
 		return 0.0;
 
 	int i4CorrectPredictions{ 0 };
-	for (size_t i{ 0 }; i < m_vecTrainSet.size(); i++)
+	for (size_t i{ 0 }; i < m_vecTestSet.size(); i++)
 	{
 		if (m_vecTrainSet[i].eGenre == m_vecPredictions[i])
 			i4CorrectPredictions++;
