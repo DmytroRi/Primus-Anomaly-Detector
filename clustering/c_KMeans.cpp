@@ -771,7 +771,15 @@ void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
 	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
 	out << "Source file:\t\t\t" << SRC_FILE << "\n";
 	out << "Number of features:\t\t" << NUM_OF_FEATURES << "\n";
-	out << "Values of k:\t\t";
+	out << "Number of MFCCs:\t\t" << NUM_OF_MFCCS << "\n";
+	out << "Number of clusters:\t\t" << NUM_OF_CLUSTERS << "\n";
+	out << "Train ratio:\t\t\t" << m_f8TrainRatio << "\n";
+    #ifdef WEIGHTED_MFCCS
+    out << "Weighted MFCCs:\t\t\tYes\n";
+    #else
+    out << "Weighted MFCCs:\t\t\tNo\n";
+    #endif
+	out << "Results:\nValues of k:\t\t";
 	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
 	{
 		out << std::setw(8) << i4K;
