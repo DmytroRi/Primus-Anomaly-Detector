@@ -9,6 +9,55 @@ JSON_PATH = "computed_data/primus_data_mean.json"
 SAMPLE_RATE = 25050
 SILENCE_DETECTOR = -1131.37097      # Value of the first MFCC if the segment is silent
 
+def extract_mfcc(
+        audio, sr= 5000,
+        n_mfcc=13, n_mels=40, 
+        frame_ms=20, hop_ms=10,
+        pre_emphasis=0.97, lifter=22,
+        with_delta=True, with_delta_delta=True,
+        cmvn=True):
+    
+    # 1) pre-emphasis
+    audio = np.append(audio[0], audio[1:] - pre_emphasis * audio[:-1])
+
+    # 2) frame & window via n_fft & hop_length
+    n_fft      = int(sr * frame_ms/1000)
+    hop_length = int(sr * hop_ms/1000)
+
+    # 3) mel spectrogram
+    S = librosa.feature.melspectrogram(
+        y=audio, sr=sr,
+        n_fft=n_fft, hop_length=hop_length,
+        n_mels=n_mels, window='hann'
+    )
+
+    # 4) log + DCT → MFCC
+    mfcc = librosa.feature.mfcc(
+        S=librosa.power_to_db(S),
+        n_mfcc=n_mfcc
+    )
+
+    # 5a) liftering
+    n_frames = mfcc.shape[1]
+    n = np.arange(n_mfcc)
+    lift = 1 + (lifter / 2) * np.sin(np.pi * n / lifter)
+    mfcc *= lift[:, np.newaxis]
+
+    # 5b) deltas
+    if with_delta:
+        d1 = librosa.feature.delta(mfcc, order=1)
+        mfcc = np.vstack([mfcc, d1])
+    if with_delta_delta:
+        d2 = librosa.feature.delta(mfcc, order=2)
+        mfcc = np.vstack([mfcc, d2])
+
+    # 5c) CMVN
+    if cmvn:
+        mfcc = (mfcc - mfcc.mean(axis=1, keepdims=True)) \
+               / (mfcc.std(axis=1, keepdims=True) + 1e-8)
+
+    return mfcc  
+
 def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15, take_mean=False):
     print("Execution of save_mfcc function has started.\n")
     # data will be a dictionary with genres as keys.
