@@ -5,8 +5,11 @@ import json
 import numpy as np
 
 DATASET_PATH = "music_data/src/"
-JSON_PATH = "computed_data/primus_data_mean.json"
-SAMPLE_RATE = 25050
+JSON_PATH    = "computed_data/mfcc_per_frame.json"
+SAMPLE_RATE  = 22050 
+N_MFCC       = 13
+FRAME_MS     = 20
+HOP_MS       = 10
 SILENCE_DETECTOR = -1131.37097      # Value of the first MFCC if the segment is silent
 
 def extract_mfcc(
@@ -58,76 +61,42 @@ def extract_mfcc(
 
     return mfcc  
 
-def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, segment_duration=15, take_mean=False):
+def save_mfcc(dataset_path, json_path):
     print("Execution of save_mfcc function has started.\n")
-    # data will be a dictionary with genres as keys.
+
     data = {}
 
-    # Variables to store information about the process
-    total_duration = 0
-    num_of_segments = 0
+     # precompute sample counts
+    frame_length = int(SAMPLE_RATE * FRAME_MS / 1000)
+    hop_length   = int(SAMPLE_RATE * HOP_MS   / 1000)
 
-    # Traverse through all subdirectories (each representing a genre)
-    for i, (dirpath, dirnames, filenames) in enumerate(os.walk(dataset_path)):
-        # Skip the root folder; process only subdirectories
-        if dirpath != dataset_path:
-            # Extract the genre from the directory name
-            genre = os.path.basename(dirpath)
-            print(f"Processing {genre}\n")
+    for dirpath, _, filenames in os.walk(dataset_path):
+        if dirpath == dataset_path:
+            continue
+        
+        genre = os.path.basename(dirpath)
+        data.setdefault(genre, {})
+        print(f"Processing {genre}\n")
+         
+         
+        # Process all files (songs) in the folder
+        for fname in filenames:
+            file_path = os.path.join(dirpath, fname)
+            signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
-            # Initialize the genre entry if not already present
-            if genre not in data:
-                data[genre] = {}
+            # Skip files that are too short for processing
+            if signal.size == 0:
+                print(f"File {file_path} is empty, skipping.")
+                continue
             
-            # Process all files (songs) in the folder
-            for f in filenames:
-                file_path = os.path.join(dirpath, f)
-                signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
-                
-                # Skip files that are too short for processing
-                if len(signal) < n_fft:
-                    print(f"File {file_path} is too short, skipping.")
-                    continue
+            # Compute MFCC: shape = (n_mfcc, n_frames)
+            mfcc_frames = extract_mfcc(signal)
 
-                segment_samples = int(sr * segment_duration)
-                segments = [signal[i:i + segment_samples] for i in range(0, len(signal), segment_samples)]
-                
-                # Create a dictionary to hold segments for this song
-                song_data = {}
-                
-                # Update state
-                total_duration += librosa.get_duration(y=signal, sr=sr)
-                num_of_segments += len(segments)
+            # Reshape MFCC: shape = (n_frames, n_mfcc)
+            mfcc_frames = mfcc_frames.T
 
-                # Process segments extracting MFCCs
-                for seg_idx, segment in enumerate(segments):
-                    # Process only segments that are exactly segment_duration long
-                    if len(segment) != segment_samples:
-                        print(f"Segment {seg_idx} in file {file_path} is not exactly {segment_duration} seconds, skipping.")
-                        num_of_segments -= 1
-                        continue
-                    
-                    mfcc = librosa.feature.mfcc(y=segment,
-                                                sr=sr,
-                                                n_mfcc=n_mfcc,
-                                                n_fft=n_fft,
-                                                hop_length=hop_length)
-                    
-                    if(take_mean):
-                        # Aggregate MFCCs by taking the mean across time frames, yielding a 13-dimensional vector
-                        mfcc = np.mean(mfcc, axis=1)
-                    
-                    # Slip silent segemts 
-                    if mfcc[0] == SILENCE_DETECTOR:
-                        print(f"Segment {seg_idx} in file {file_path} is silent (MFCC[0]={SILENCE_DETECTOR}), skipping.")
-                        num_of_segments -= 1
-                        continue
-
-                    # Save MFCCs for this segment using the segment index as key
-                    song_data[str(seg_idx)] = mfcc.tolist()
-                
-                # Under the current genre, use song data using the song filename as the key
-                data[genre][f] = song_data
+            data[genre][fname] = {"frames": mfcc_frames.tolist()}
+            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.\n")
 
     # Write the restructured data into the JSON file
     with open(json_path, "w") as fp:
@@ -135,10 +104,10 @@ def save_mfcc(dataset_path, json_path, n_mfcc=13, n_fft=2048, hop_length=512, se
     print("The end of the execution.\n")
 
     # Information about execution 
-    print("-------------------------------------------")
-    print(f"Total duration of tracks: {total_duration} seconds.\nTotal amount of segments: {num_of_segments}.\nSegments duration: {segment_duration} seconds.")
-    print(f"Total effective duration: {segment_duration*num_of_segments} seconds.\nRetention rate: {100*segment_duration*num_of_segments/total_duration}%.")
-    print("-------------------------------------------")
+    # print("-------------------------------------------")
+    # print(f"Total duration of tracks: {total_duration} seconds.\nTotal amount of segments: {num_of_segments}.\nSegments duration: {segment_duration} seconds.")
+    # print(f"Total effective duration: {segment_duration*num_of_segments} seconds.\nRetention rate: {100*segment_duration*num_of_segments/total_duration}%.")
+    # print("-------------------------------------------")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH, segment_duration=15, take_mean=True)
+    save_mfcc(DATASET_PATH, JSON_PATH)
