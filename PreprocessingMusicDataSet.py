@@ -10,7 +10,7 @@ SAMPLE_RATE  = 22050
 N_MFCC       = 13
 FRAME_MS     = 20
 HOP_MS       = 10
-SILENCE_DETECTOR = -1131.37097      # Value of the first MFCC if the segment is silent
+SILENCE_DETECTOR = -530.241455078125      # Value of the first MFCC if the segment is silent
 
 def extract_mfcc(
         audio, sr= 5000,
@@ -90,17 +90,37 @@ def save_mfcc(dataset_path, json_path):
                 continue
             
             # Compute MFCC: shape = (n_mfcc, n_frames)
-            mfcc_frames = extract_mfcc(signal)
+            mfcc_frames = extract_mfcc(audio=signal,
+                                       sr=SAMPLE_RATE,
+                                       n_mfcc=N_MFCC,
+                                       frame_ms=FRAME_MS,
+                                       hop_ms=HOP_MS,
+                                       pre_emphasis=0.97,
+                                       lifter=22,
+                                       with_delta=False,
+                                       with_delta_delta=False,
+                                       cmvn=False)
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
             mfcc_frames = mfcc_frames.T
 
+            # Check if the MFCC frames are silent
+            non_silence = ~np.isclose(mfcc_frames[:,0], SILENCE_DETECTOR)
+            idx = np.where(non_silence)[0]
+            if idx.size:
+                # slice from first non‐silent to last non‐silent
+                mfcc_frames = mfcc_frames[idx[0] : idx[-1] + 1]
+            else:
+                # entirely silent → empty
+                mfcc_frames = np.empty((0, mfcc_frames.shape[1]))
+
             data[genre][fname] = {"frames": mfcc_frames.tolist()}
-            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.\n")
+            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
 
     # Write the restructured data into the JSON file
+    print(f"Writing data to {json_path}...\n")
     with open(json_path, "w") as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp, indent=2)
     print("The end of the execution.\n")
 
     # Information about execution 
