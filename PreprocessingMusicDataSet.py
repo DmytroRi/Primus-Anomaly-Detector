@@ -4,8 +4,8 @@ import librosa
 import json
 import numpy as np
 
-DATASET_PATH = "music_data/src/"
-JSON_PATH    = "computed_data/mfcc_per_frame.json"
+DATASET_PATH = "E:\\dataset"
+JSON_PATH    = "computed_data/features_13mfcc_20frame_10hop_delta_deltadelta_nocmvn.json"
 SAMPLE_RATE  = 22050 
 N_MFCC       = 13
 FRAME_MS     = 20
@@ -49,10 +49,10 @@ def extract_mfcc(
     # 5b) deltas
     if with_delta:
         d1 = librosa.feature.delta(mfcc, order=1)
-        mfcc = np.vstack([mfcc, d1])
-    if with_delta_delta:
         d2 = librosa.feature.delta(mfcc, order=2)
-        mfcc = np.vstack([mfcc, d2])
+        mfcc = np.vstack([mfcc, d1])
+        if with_delta_delta:
+            mfcc = np.vstack([mfcc, d2])
 
     # 5c) CMVN
     if cmvn:
@@ -97,8 +97,8 @@ def save_mfcc(dataset_path, json_path):
                                        hop_ms=HOP_MS,
                                        pre_emphasis=0.97,
                                        lifter=22,
-                                       with_delta=False,
-                                       with_delta_delta=False,
+                                       with_delta=True,
+                                       with_delta_delta=True,
                                        cmvn=False)
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
