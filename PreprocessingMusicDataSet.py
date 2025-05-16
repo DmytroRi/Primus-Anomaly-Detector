@@ -10,29 +10,18 @@ SAMPLE_RATE  = 22050
 N_MFCC       = 13
 FRAME_MS     = 20
 HOP_MS       = 10
-SILENCE_DETECTOR = -530.241455078125      # Value of the first MFCC if the segment is silent
+SILENCE_THRESHOLD_DB = 40
 
-def trim_silence(signal):
+def trim_silence_edges(signal):
 
-    # compute onset strength envelope
-    onset_env = librosa.onset.onset_strength(y=signal, sr=SAMPLE_RATE)
+    intervals = librosa.effects.split(y=signal, top_db=SILENCE_THRESHOLD_DB)
 
-    # find frame indices of onsets
-    onset_frames = librosa.onset.onset_detect(
-        onset_envelope=onset_env,
-        sr=SAMPLE_RATE,
-        hop_length=int(SAMPLE_RATE*HOP_MS/1000), 
-        backtrack=True                              # backtrack to the nearest preceding minimum
-        )
-
-    if len(onset_frames) > 0:
-        # take the first detected onset
-        first_onset_frame = onset_frames[0]
-        first_onset_sample = first_onset_frame * int(SAMPLE_RATE*HOP_MS/1000)
-        signal_trimmed = signal[first_onset_sample:]
-        print(f"Trimmed {first_onset_sample/SAMPLE_RATE:.2f}s of silence/intros.")
+    if intervals.size != 0:
+        start_sample = intervals[0, 0]  # start of the first segment
+        end_sample   = intervals[-1, 1] # end of the last segment
+        signal_trimmed = signal[start_sample:end_sample]
+        print(f"Trimmed {start_sample/SAMPLE_RATE:.2f}s of silence/intros and {len(signal)-end_sample/SAMPLE_RATE:.2f}s of silence/outros.")
     else:
-        # fallback to no trim
         signal_trimmed = signal
 
     return signal_trimmed
@@ -87,7 +76,7 @@ def extract_mfcc(
     return mfcc  
 
 def save_mfcc(dataset_path, json_path):
-    print("Execution of save_mfcc function has started.\n")
+    print("Execution of save_mfcc function has started.")
 
     data = {}
 
@@ -109,9 +98,9 @@ def save_mfcc(dataset_path, json_path):
             file_path = os.path.join(dirpath, fname)
             signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
-            print(f"Processing {fname}...\n")
+            print(f"Processing {fname}...")
             # Trim silence from the beginning of the audio signal
-            signal = trim_silence(signal)
+            signal = trim_silence_edges(signal)
 
             # Check if the signal is empty after trimming
             if signal.size == 0:
@@ -132,16 +121,6 @@ def save_mfcc(dataset_path, json_path):
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
             mfcc_frames = mfcc_frames.T
-
-            # Check if the MFCC frames are silent
-            non_silence = ~np.isclose(mfcc_frames[:,0], SILENCE_DETECTOR)
-            idx = np.where(non_silence)[0]
-            if idx.size:
-                # slice from first non‐silent to last non‐silent
-                mfcc_frames = mfcc_frames[idx[0] : idx[-1] + 1]
-            else:
-                # entirely silent → empty
-                mfcc_frames = np.empty((0, mfcc_frames.shape[1]))
 
             data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
