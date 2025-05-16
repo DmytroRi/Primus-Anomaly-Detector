@@ -12,6 +12,31 @@ FRAME_MS     = 20
 HOP_MS       = 10
 SILENCE_DETECTOR = -530.241455078125      # Value of the first MFCC if the segment is silent
 
+def trim_silence(signal):
+
+    # compute onset strength envelope
+    onset_env = librosa.onset.onset_strength(y=signal, sr=SAMPLE_RATE)
+
+    # find frame indices of onsets
+    onset_frames = librosa.onset.onset_detect(
+        onset_envelope=onset_env,
+        sr=SAMPLE_RATE,
+        hop_length=int(SAMPLE_RATE*HOP_MS/1000), 
+        backtrack=True                              # backtrack to the nearest preceding minimum
+        )
+
+    if len(onset_frames) > 0:
+        # take the first detected onset
+        first_onset_frame = onset_frames[0]
+        first_onset_sample = first_onset_frame * int(SAMPLE_RATE*HOP_MS/1000)
+        signal_trimmed = signal[first_onset_sample:]
+        print(f"Trimmed {first_onset_sample/SAMPLE_RATE:.2f}s of silence/intros.")
+    else:
+        # fallback to no trim
+        signal_trimmed = signal
+
+    return signal_trimmed
+
 def extract_mfcc(
         audio, sr= 5000,
         n_mfcc=13, n_mels=40, 
@@ -84,11 +109,15 @@ def save_mfcc(dataset_path, json_path):
             file_path = os.path.join(dirpath, fname)
             signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
-            # Skip files that are too short for processing
+            print(f"Processing {fname}...\n")
+            # Trim silence from the beginning of the audio signal
+            signal = trim_silence(signal)
+
+            # Check if the signal is empty after trimming
             if signal.size == 0:
                 print(f"File {file_path} is empty, skipping.")
                 continue
-            
+
             # Compute MFCC: shape = (n_mfcc, n_frames)
             mfcc_frames = extract_mfcc(audio=signal,
                                        sr=SAMPLE_RATE,
