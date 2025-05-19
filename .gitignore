@@ -13,3 +13,7 @@ __pycache__/
 clustering/*
 !clustering/*.cpp
 !clustering/*.h
+
+# Ignore huge features files
+computed_data/*
+!computed_data/_old/*
