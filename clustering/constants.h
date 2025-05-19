@@ -45,7 +45,7 @@ struct s_Song
 {
 	e_Genres												eGenre;						// Genre of the song
 	std::string												strName;					// Name of the song
-	std::vector<std::array<double, NUM_OF_MFCCS>>			vecSegments;				// MFCCs of the song
+	std::vector<std::array<double, NUM_OF_FEATURES>>		vecSegments;				// MFCCs of the song
 	std::vector<std::vector<double>>						vecFeatures;				// MFCCs + delta + delta-delta
 	int														i4Centroid; 				// ID of the centroid assigned to the song
 	bool													bWasChanged;				// Flag indicating if the song was assigned to a different centroid

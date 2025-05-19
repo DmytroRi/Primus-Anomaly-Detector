@@ -34,19 +34,26 @@ bool c_AlgorithmBase::bReadData()
 			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
 			sSong.bWasChanged = false;
 
-			for (auto const& [segKey, mfccArr] : segmentsObj.items())
+			auto itFramesStart = segmentsObj.find("frames");
+			if (itFramesStart == segmentsObj.end() || !itFramesStart->is_array())
 			{
-                if (!mfccArr.is_array() || mfccArr.size() != NUM_OF_MFCCS)
+				std::cout << "Missing or invalid 'frames' array for " << genreName << "/" << songName << "\n";
+				return false;
+			}
+
+			for (auto const& features : *itFramesStart)
+			{
+                if (!features.is_array() || features.size() != NUM_OF_FEATURES)
 				{
-					std::cout << "Expected 13-element array for " << genreName << "/" << songName << "/" << segKey;
+					std::cout << "Expected " << NUM_OF_MFCCS << "-element array for " << genreName << "/" << songName << "\n";
 					return false;
 				}
 
-				std::array<double,NUM_OF_MFCCS> mfcc;
-				for (int i {0}; i < NUM_OF_MFCCS; i++)
-                    mfcc[i] = mfccArr[i].get<double>();
+				std::array<double,NUM_OF_FEATURES> aFeaturesToSave;
+				for (int i {0}; i < NUM_OF_FEATURES; i++)
+                    aFeaturesToSave[i] = features[i].get<double>();
 
-				sSong.vecSegments.push_back(mfcc);
+				sSong.vecSegments.push_back(aFeaturesToSave);
 			}
 
 			m_vecDataSet.push_back(std::move(sSong));
