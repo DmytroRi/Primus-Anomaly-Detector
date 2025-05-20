@@ -45,7 +45,7 @@ bool c_AlgorithmBase::bReadData()
 			{
                 if (!features.is_array() || features.size() != NUM_OF_FEATURES)
 				{
-					std::cout << "Expected " << NUM_OF_MFCCS << "-element array for " << genreName << "/" << songName << "\n";
+					std::cout << "Expected " << NUM_OF_FEATURES << "-element array for " << genreName << "/" << songName << "\n";
 					return false;
 				}
 
