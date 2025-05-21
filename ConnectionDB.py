@@ -1,50 +1,54 @@
 import sqlite3
+from typing import List, Tuple, Sequence
 
 DB_PATH = "clustering/Database/features.db"     # Path to the SQLite database
 
 def insert_in_DB(
-    song_name: str,
-    song_genre: str,
-    classification: int,
-    mfcc_values: list
+    records: Sequence[Tuple[str, str, int, List[float]]]
 ):
     """
-    Inserts a new feature row into the FeaturesExtended table.
+    Inserts multiple MFCC frames into FeaturesExtended in one batch.
 
     Args:
-        song_name (str): Name of the song.
-        song_genre (str): Genre of the song.
-        classification (int): Classification result (e.g., 1 or 0).
-        mfcc_values (list): A list of 13 MFCC float values [MFCC0, ..., MFCC12].
+      records: an iterable of tuples
+        (song_name, song_genre, classification, mfcc_values)
+        where mfcc_values is a list of exactly 13 floats
     """
+    # Build the parameter tuples
+    params = []
+    for song_name, song_genre, classification, mfcc_values in records:
+        if len(mfcc_values) != 13:
+            raise ValueError("Each mfcc_values must have 13 floats.")
+        # flatten into one tuple of length 16
+        params.append((song_name, song_genre, classification, *mfcc_values))
 
-    if len(mfcc_values) != 13:
-        raise ValueError("Exactly 13 MFCC values are required.")
-
+    conn = sqlite3.connect(DB_PATH)
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        cursor.execute("""
+        cur = conn.cursor()
+        # turn off autocommit so all INSERTs live in a single transaction
+        cur.execute("BEGIN")
+        cur.executemany("""
             INSERT INTO FeaturesExtended (
-                SONG_NAME, SONG_GENRE, CLASSIFICATION,
+                SONG_NAME,
+                SONG_GENRE,
+                CLASSIFICATION,
                 MFCC0, MFCC1, MFCC2, MFCC3, MFCC4,
                 MFCC5, MFCC6, MFCC7, MFCC8,
                 MFCC9, MFCC10, MFCC11, MFCC12
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """, (
-            song_name, song_genre, classification,
-            *mfcc_values
-        ))
-
+            ) VALUES (
+                ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?
+            );
+        """, params)
         conn.commit()
-    
+        print(f"Inserted {len(params)} rows in one transaction")
     except sqlite3.Error as e:
-        print(f"SQLite error: {e}")
-    
+        conn.rollback()
+        print(f"SQLite error during bulk insert: {e}")
     finally:
-        if conn:
-            conn.close()
+        conn.close()
 
 
 #-- Remove all rows
