@@ -43,6 +43,13 @@ def insert_in_DB(
         print(f"SQLite error: {e}")
     
     finally:
-        print("Data inserted successfully.")
         if conn:
             conn.close()
+
+
+#-- Remove all rows
+# DELETE FROM FeaturesExtended;
+# 
+# -- Reset the sqlite_sequence entry for this table
+# DELETE FROM sqlite_sequence
+#  WHERE name = 'FeaturesExtended';

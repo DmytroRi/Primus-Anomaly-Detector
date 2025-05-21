@@ -138,8 +138,9 @@ def save_mfcc(dataset_path, json_path):
                         classification=DUMMY_CLASSIFICATION,
                         mfcc_values=mfcc_values
                     )
-
-            data[genre][fname] = {"frames": mfcc_frames.tolist()}
+                print("Data inserted successfully.")
+            else:
+                data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
 
     if not USE_DB:
