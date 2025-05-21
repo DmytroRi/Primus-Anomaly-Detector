@@ -31,18 +31,18 @@ def insert_in_DB(
                 MFCC0, MFCC1, MFCC2, MFCC3, MFCC4,
                 MFCC5, MFCC6, MFCC7, MFCC8,
                 MFCC9, MFCC10, MFCC11, MFCC12
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             song_name, song_genre, classification,
             *mfcc_values
         ))
 
         conn.commit()
-        print("Data inserted successfully.")
     
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
     
     finally:
+        print("Data inserted successfully.")
         if conn:
             conn.close()
