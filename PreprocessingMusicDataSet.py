@@ -3,14 +3,20 @@ import os
 import librosa
 import json
 import numpy as np
+import ConnectionDB as DB
+
 
 DATASET_PATH = "E:\\dataset"
 JSON_PATH    = "computed_data/features_13mfcc_20frame_10hop_delta_deltadelta_nocmvn.json"
+USE_DB       = True
+
+# Constants
 SAMPLE_RATE  = 22050 
 N_MFCC       = 13
 FRAME_MS     = 20
 HOP_MS       = 10
 SILENCE_THRESHOLD_DB = 40
+DUMMY_CLASSIFICATION = 8
 
 def trim_silence_edges(signal):
 
@@ -121,14 +127,26 @@ def save_mfcc(dataset_path, json_path):
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
             mfcc_frames = mfcc_frames.T
+            
+            if USE_DB:
+                # Save MFCC to the database
+                for i in range(mfcc_frames.shape[0]):
+                    mfcc_values = mfcc_frames[i].tolist()
+                    DB.insert_in_DB(
+                        song_name=fname,
+                        song_genre=genre,
+                        classification=DUMMY_CLASSIFICATION,
+                        mfcc_values=mfcc_values
+                    )
 
             data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
 
-    # Write the restructured data into the JSON file
-    print(f"Writing data to {json_path}...\n")
-    with open(json_path, "w") as fp:
-        json.dump(data, fp, indent=2)
+    if not USE_DB:
+        # Write the restructured data into the JSON file
+        print(f"Writing data to {json_path}...\n")
+        with open(json_path, "w") as fp:
+            json.dump(data, fp, indent=2)
     print("The end of the execution.\n")
 
     # Information about execution 
