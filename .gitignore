@@ -11,10 +11,12 @@ __pycache__/
 # Ignore project files except .cpp and .h
 .vs/
 clustering/*
-!clustering/Database/
 !clustering/*.cpp
 !clustering/*.h
 
 # Ignore huge features files
 computed_data/*
 !computed_data/_old/*
+
+# Ignore database files
+clustering/Database/features.db

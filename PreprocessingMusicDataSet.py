@@ -121,25 +121,27 @@ def save_mfcc(dataset_path, json_path):
                                        hop_ms=HOP_MS,
                                        pre_emphasis=0.97,
                                        lifter=22,
-                                       with_delta=True,
-                                       with_delta_delta=True,
+                                       with_delta=False,
+                                       with_delta_delta=False,
                                        cmvn=False)
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
             mfcc_frames = mfcc_frames.T
             
             if USE_DB:
-                # Save MFCC to the database
+                records = []
                 for i in range(mfcc_frames.shape[0]):
                     mfcc_values = mfcc_frames[i].tolist()
-                    DB.insert_in_DB(
-                        song_name=fname,
-                        song_genre=genre,
-                        classification=DUMMY_CLASSIFICATION,
-                        mfcc_values=mfcc_values
-                    )
-
-            data[genre][fname] = {"frames": mfcc_frames.tolist()}
+                    records.append((
+                    fname,                   # song_name
+                    genre,                   # song_genre
+                    DUMMY_CLASSIFICATION,    # classification
+                    mfcc_values              # list of 13 floats
+                ))
+                DB.insert_in_DB(records)
+                print(f"Inserted {len(records)} frames for {fname}.")    
+            else:
+                data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
 
     if not USE_DB:
