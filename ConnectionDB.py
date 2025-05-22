@@ -51,9 +51,21 @@ def insert_in_DB(
         conn.close()
 
 
-#-- Remove all rows
-# DELETE FROM FeaturesExtended;
-# 
-# -- Reset the sqlite_sequence entry for this table
-# DELETE FROM sqlite_sequence
-#  WHERE name = 'FeaturesExtended';
+def reset_DB():
+    """
+    Resets the database by removing all rows from FeaturesExtended
+    and resetting the sqlite_sequence entry for this table.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        # Remove all rows
+        cur.execute("DELETE FROM FeaturesExtended;")
+        # Reset the sqlite_sequence entry for this table
+        cur.execute("DELETE FROM sqlite_sequence WHERE name = 'FeaturesExtended';")
+        conn.commit()
+        print("Database reset successfully.")
+    except sqlite3.Error as e:
+        print(f"SQLite error during database reset: {e}")
+    finally:
+        conn.close()
