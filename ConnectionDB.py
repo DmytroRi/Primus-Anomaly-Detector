@@ -133,6 +133,8 @@ def compute_and_save_zscored_mfcc(
     Reads all MFCC rows from `source_table`, applies Z-Scoring
     to MFCC0…MFCC12, and writes the normalized rows into `target_table`.
     """
+    print(f"Computing Z-Scored MFCCs from {source_table} to {target_table}...")
+    
     # Load existing data
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
