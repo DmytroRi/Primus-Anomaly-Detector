@@ -158,6 +158,4 @@ def save_mfcc(dataset_path, json_path):
     # print("-------------------------------------------")
 
 if __name__ == "__main__":
-    #DB.create_table_features_extended();
-    #DB.create_table_features_extended_zscoring()
     save_mfcc(DATASET_PATH, JSON_PATH)
