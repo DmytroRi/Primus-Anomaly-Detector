@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List, Tuple, Sequence
 
-DB_PATH = "clustering/Database/features.db"     # Path to the SQLite database
+DB_PATH = "computed_data/features.db"     # Path to the SQLite database
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
@@ -67,5 +67,59 @@ def reset_DB():
         print("Database reset successfully.")
     except sqlite3.Error as e:
         print(f"SQLite error during database reset: {e}")
+    finally:
+        conn.close()
+
+def create_table_features_extended():
+    """
+    Creates the FeaturesExtended table in the database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+    CREATE TABLE IF NOT EXISTS FeaturesExtended (
+        SONG_NAME      TEXT,
+        SONG_GENRE     TEXT,
+        CLASSIFICATION TEXT,
+        SEGMENT_ID     INTEGER PRIMARY KEY AUTOINCREMENT,
+        MFCC0          REAL, MFCC1  REAL, MFCC2  REAL,
+        MFCC3          REAL, MFCC4  REAL, MFCC5  REAL,
+        MFCC6          REAL, MFCC7  REAL, MFCC8  REAL,
+        MFCC9          REAL, MFCC10 REAL, MFCC11 REAL,
+        MFCC12         REAL
+        );
+        """)
+        conn.commit()
+        print("Table created successfully.")
+    except sqlite3.Error as e:
+        print(f"SQLite error during table creation: {e}")
+    finally:
+        conn.close()
+
+def create_table_features_extended_zscoring():
+    """
+    Creates the FeaturesExtendedZScroing table in the database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+    CREATE TABLE IF NOT EXISTS FeaturesExtendedZScoring (
+        SONG_NAME      TEXT,
+        SONG_GENRE     TEXT,
+        CLASSIFICATION TEXT,
+        SEGMENT_ID     INTEGER PRIMARY KEY AUTOINCREMENT,
+        MFCC0          REAL, MFCC1  REAL, MFCC2  REAL,
+        MFCC3          REAL, MFCC4  REAL, MFCC5  REAL,
+        MFCC6          REAL, MFCC7  REAL, MFCC8  REAL,
+        MFCC9          REAL, MFCC10 REAL, MFCC11 REAL,
+        MFCC12         REAL
+        );
+        """)
+        conn.commit()
+        print("Table created successfully.")
+    except sqlite3.Error as e:
+        print(f"SQLite error during table creation: {e}")
     finally:
         conn.close()
