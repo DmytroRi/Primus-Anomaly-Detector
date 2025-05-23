@@ -1,4 +1,5 @@
 import sqlite3
+import numpy as np
 from typing import List, Tuple, Sequence
 
 DB_PATH = "computed_data/features.db"     # Path to the SQLite database
@@ -121,5 +122,68 @@ def create_table_features_extended_zscoring():
         print("Table created successfully.")
     except sqlite3.Error as e:
         print(f"SQLite error during table creation: {e}")
+    finally:
+        conn.close()
+
+def compute_and_save_zscored_mfcc(
+    source_table: str = "FeaturesExtended",
+    target_table: str = "FeaturesExtendedZScoring"
+):
+    """
+    Reads all MFCC rows from `source_table`, applies Z-Scoring
+    to MFCC0…MFCC12, and writes the normalized rows into `target_table`.
+    """
+    # Load existing data
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(f"""
+      SELECT SONG_NAME, SONG_GENRE, CLASSIFICATION,
+             MFCC0, MFCC1, MFCC2, MFCC3, MFCC4,
+             MFCC5, MFCC6, MFCC7, MFCC8, MFCC9,
+             MFCC10, MFCC11, MFCC12
+      FROM {source_table};
+    """)
+    rows = cur.fetchall()
+    if not rows:
+        print("No data found in source table.")
+        conn.close()
+        return
+    
+    # Separate metadata vs MFCC matrix
+    metadata = [(r[0], r[1], r[2]) for r in rows]
+    mfcc_matrix = np.array([r[3:] for r in rows], dtype=float)
+
+    # Compute per-column mean & std
+    means = mfcc_matrix.mean(axis=0)
+    stds  = mfcc_matrix.std(axis=0, ddof=0)
+    # avoid divide-by-zero
+    stds[stds == 0] = 1.0
+
+    # Apply Z-Score
+    zscored = (mfcc_matrix - means) / stds
+
+    # Prepare insert parameters
+    params = []
+    for (song, genre, cls), mfcc_vals in zip(metadata, zscored):
+        params.append((song, genre, cls, *mfcc_vals.tolist()))
+
+    # Bulk-insert
+    col_list = ",".join([
+        "SONG_NAME", "SONG_GENRE", "CLASSIFICATION",
+        "MFCC0","MFCC1","MFCC2","MFCC3","MFCC4",
+        "MFCC5","MFCC6","MFCC7","MFCC8",
+        "MFCC9","MFCC10","MFCC11","MFCC12"
+    ])
+    placeholders = ",".join(["?"] * 16)
+    sql = f"INSERT INTO {target_table} ({col_list}) VALUES ({placeholders});"
+
+    try:
+        cur.execute("BEGIN")
+        cur.executemany(sql, params)
+        conn.commit()
+        print(f"Inserted {len(params)} z-scored rows into {target_table}.")
+    except sqlite3.Error as e:
+        conn.rollback()
+        print(f"Error during bulk insert: {e}")
     finally:
         conn.close()
