@@ -17,3 +17,6 @@ clustering/*
 # Ignore huge features files
 computed_data/*
 !computed_data/_old/*
+
+# Ignore database files
+clustering/Database/features.db
