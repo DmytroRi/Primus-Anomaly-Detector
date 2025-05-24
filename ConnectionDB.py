@@ -2,7 +2,8 @@ import sqlite3
 import numpy as np
 from typing import List, Tuple, Sequence
 
-DB_PATH = "computed_data/features.db"     # Path to the SQLite database
+DB_PATH = "computed_data/features.db"      # Path to the SQLite database
+WORKING_TABLE = "FeaturesExtended"         # Working table name for MFCC features
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
@@ -189,3 +190,23 @@ def compute_and_save_zscored_mfcc(
         print(f"Error during bulk insert: {e}")
     finally:
         conn.close()
+
+def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, float, float, float, float, float, float, float, float]]:
+    """
+    Uploads data from the specified table in the database.
+    """
+    print(f"Uploading data from table {WORKING_TABLE}...")
+    conn = sqlite3.connect(DB_PATH)
+    cur  = conn.cursor()
+    cur.execute(f"""
+                SELECT 
+                "SONG_NAME", "SONG_GENRE", "CLASSIFICATION",
+                "MFCC0",    "MFCC1",    "MFCC2",    "MFCC3",    "MFCC4",
+                "MFCC5",    "MFCC6",    "MFCC7",    "MFCC8",
+                "MFCC9",    "MFCC10",   "MFCC11",   "MFCC12"
+                FROM {WORKING_TABLE};
+                """)
+    rows = cur.fetchall()
+    conn.close()
+    print(f"Uploaded {len(rows)} rows from {WORKING_TABLE}.")
+    return rows
