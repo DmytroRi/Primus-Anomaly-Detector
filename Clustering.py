@@ -32,4 +32,5 @@ def split_data():
 
 
     print("Data split completed.")
+    print(f"Train: {X_train.shape[0]} samples, Test: {X_test.shape[0]} samples")
     pass
