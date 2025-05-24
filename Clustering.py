@@ -40,6 +40,7 @@ def compute_knn(
             'genres_test': list[str] (if provided)
         }
     """
+    print("Computing KNN...")
     # 1) Fit
     knn = KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=algorithm)
     knn.fit(X_train, y_train)
@@ -65,6 +66,7 @@ def compute_knn(
     if genres_test is not None:
         results['genres_test'] = genres_test
 
+    print("KNN computation completed.")
     return results
 
 def split_data():
