@@ -6,13 +6,14 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import train_test_split
 
 TESTING_RATIO = 0.2
+NEIGHBOURS = 5
 
 def compute_knn(
     X_train, X_test,
     y_train, y_test,
     names_test=None,
     genres_test=None,
-    n_neighbors: int = 5,
+    n_neighbors: int = NEIGHBOURS,
     algorithm: str = 'auto'
 ):
     """
