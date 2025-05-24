@@ -94,4 +94,12 @@ def split_data():
 
     print("Data split completed.")
     print(f"Train: {X_train.shape[0]} samples, Test: {X_test.shape[0]} samples.")
+
+    results = compute_knn(
+        X_train, X_test,
+        y_train, y_test,
+        names_test=names_test,
+        genres_test=genres_test
+    )
+    
     pass
