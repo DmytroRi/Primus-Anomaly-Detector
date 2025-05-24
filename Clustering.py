@@ -69,6 +69,27 @@ def compute_knn(
     print("KNN computation completed.")
     return results
 
+def output_results(results):
+    """
+    Outputs the results of the KNN evaluation.
+
+    Args:
+        results (dict): Results from compute_knn function.
+    """
+    print(f"Accuracy: {results['accuracy']}")
+    print("Classification Report:")
+    print(results['classification_report'])
+    print("Confusion Matrix:")
+    print(results['confusion_matrix'])
+
+    if 'names_test' in results:
+        print("Test Song Names:")
+        print(results['names_test'][:10])  # Print first 10 names
+    if 'genres_test' in results:
+        print("Test Genres:")
+        print(results['genres_test'][:10])  # Print first 10 genres
+
+
 def split_data():
     """
     Splits the dataset into training, validation, and test sets.
@@ -105,4 +126,6 @@ def split_data():
         genres_test=genres_test
     )
     
+    output_results(results)
+
     pass
