@@ -50,7 +50,7 @@ def compute_knn(
     y_pred = knn.predict(X_test)
     
     # 2.1) Decode labels
-    le = LabaleEncoder()
+    le = LabelEncoder()
     y_pred = le.inverse_transform(y_pred)  # Decode predictions back to original labels
 
     # 3) Evaluate
@@ -108,7 +108,7 @@ def split_data():
     labels = np.array([r[2] for r in rows], dtype=np.int32)         # shape (N,)
     features = np.array([r[3:] for r in rows], dtype=np.float32)    # shape (N, 13)
 
-    le = LabaleEncoder()
+    le = LabelEncoder()
     y = le.fit_transform(song_genres)                               # Encode labels to integers
 
     X_train, X_test, y_train, y_test, \
