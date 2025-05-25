@@ -4,6 +4,7 @@ import ConnectionDB as DB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
@@ -47,6 +48,10 @@ def compute_knn(
 
     # 2) Predict
     y_pred = knn.predict(X_test)
+    
+    # 2.1) Decode labels
+    le = LabaleEncoder()
+    y_pred = le.inverse_transform(y_pred)  # Decode predictions back to original labels
 
     # 3) Evaluate
     acc    = accuracy_score(y_test, y_pred)
@@ -103,18 +108,20 @@ def split_data():
     labels = np.array([r[2] for r in rows], dtype=np.int32)         # shape (N,)
     features = np.array([r[3:] for r in rows], dtype=np.float32)    # shape (N, 13)
 
+    le = LabaleEncoder()
+    y = le.fit_transform(song_genres)                               # Encode labels to integers
+
     X_train, X_test, y_train, y_test, \
     names_train, names_test, \
     genres_train, genres_test = train_test_split(
     features,
-    labels,
+    y,
     song_names,
     song_genres,
     test_size=TESTING_RATIO,  
-    stratify=labels,            # keep distribution of classes
+    stratify=y,            # keep distribution of classes
     random_state=42
     )
-
 
     print("Data split completed.")
     print(f"Train: {X_train.shape[0]} samples, Test: {X_test.shape[0]} samples.")
