@@ -6,6 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from collections import Counter
 from annoy import AnnoyIndex
 
 K_MAX = 20
@@ -139,6 +140,34 @@ def build_annoy_index(X_train, n_trees=N_TREES, metric=METRIC):
     idx.build(n_trees)
     print(f"Index built in {time.time() - t0:.1f}s\n")
     return idx
+
+def knn_with_annoy(idx, X_test, y_train, k):
+    """
+    Queries idx for each vector in X_test with k neighbors,
+    returns predicted labels and query time.
+    """
+    N = len(X_test)
+    y_pred = np.empty(N, dtype=y_train.dtype)
+    t0 = time.time()
+    for j, q in enumerate(X_test):
+        nbrs = idx.get_nns_by_vector(q.tolist(), k)
+        y_pred[j] = Counter(y_train[i] for i in nbrs).most_common(1)[0][0]
+    return y_pred, time.time() - t0
+
+def evaluate_best_k(idx, X_test, y_train, y_test, k_max=K_MAX):
+    """
+    Loops k = 1..k_max, runs knn_with_annoy, prints accuracy & time,
+    and returns (best_k, best_acc, y_best).
+    """
+    best_k, best_acc, y_best = 1, 0.0, None
+    for k in range(1, k_max + 1):
+        y_pred, dt = knn_with_annoy(idx, X_test, y_train, k)
+        acc = accuracy_score(y_test, y_pred)
+        print(f"k={k:2d} -> acc={acc:.4f}  time={dt:.2f}s")
+        if acc > best_acc:
+            best_acc, best_k, y_best = acc, k, y_pred
+    print(f"\nBest k = {best_k} with accuracy {best_acc:.4f}\n")
+    return best_k, best_acc, y_best
 
 def main():
     print("\n--- Split & Scale Data ---")
