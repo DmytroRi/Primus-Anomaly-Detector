@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
+K_MAX = 20
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
@@ -136,3 +137,21 @@ def split_data():
     output_results(results)
 
     pass
+
+def main():
+     print("\n--- Split & Scale Data ---")
+    X_train, X_test, y_train, y_test, names_test, genres_test, le = split_data()
+
+    print("\n--- Build Index ---")
+    annoy_idx = build_annoy_index(X_train)
+
+    print("\n--- Evaluate k = 1…{K_MAX} ---".format(K_MAX=K_MAX))
+    best_k, best_acc, y_best = evaluate_best_k(
+        annoy_idx, X_test, y_train, y_test, k_max=K_MAX
+    )
+
+    print("\n--- Detailed Report for Best k ---")
+    output_detailed_report(y_best, y_test, le, names_test, genres_test)
+
+if __name__ == "__main__":
+    main()
