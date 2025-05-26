@@ -5,6 +5,12 @@ from typing import List, Tuple, Sequence
 DB_PATH = "computed_data/features.db"      # Path to the SQLite database
 WORKING_TABLE = "FeaturesExtended"         # Working table name for MFCC features
 
+"""
+TABLES NAMING CONVENTION:
+[FRAME_LENGTH][HOP_LENGTH]_[DELTA_TYPE]_[ADDITIONAL_INFO]
+"""
+WORKING_TABLE1 = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
+
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
 ):
@@ -29,8 +35,8 @@ def insert_in_DB(
         cur = conn.cursor()
         # turn off autocommit so all INSERTs live in a single transaction
         cur.execute("BEGIN")
-        cur.executemany("""
-            INSERT INTO FeaturesExtended (
+        cur.executemany(f"""
+            INSERT INTO {WORKING_TABLE1} (
                 SONG_NAME,
                 SONG_GENRE,
                 CLASSIFICATION,
@@ -55,16 +61,16 @@ def insert_in_DB(
 
 def reset_DB():
     """
-    Resets the database by removing all rows from FeaturesExtended
+    Resets the database by removing all rows from WORKING_TABLE
     and resetting the sqlite_sequence entry for this table.
     """
     conn = sqlite3.connect(DB_PATH)
     try:
         cur = conn.cursor()
         # Remove all rows
-        cur.execute("DELETE FROM FeaturesExtended;")
+        cur.execute(f"DELETE FROM {WORKING_TABLE1};")
         # Reset the sqlite_sequence entry for this table
-        cur.execute("DELETE FROM sqlite_sequence WHERE name = 'FeaturesExtended';")
+        cur.execute(f"DELETE FROM sqlite_sequence WHERE name = '{WORKING_TABLE1}';")
         conn.commit()
         print("Database reset successfully.")
     except sqlite3.Error as e:
@@ -74,13 +80,13 @@ def reset_DB():
 
 def create_table_features_extended():
     """
-    Creates the FeaturesExtended table in the database.
+    Creates the WORKING_TABLE table in the database.
     """
     conn = sqlite3.connect(DB_PATH)
     try:
         cur = conn.cursor()
         cur.execute(f"""
-    CREATE TABLE IF NOT EXISTS FeaturesExtended (
+        CREATE TABLE IF NOT EXISTS {WORKING_TABLE1} (
         SONG_NAME      TEXT,
         SONG_GENRE     TEXT,
         CLASSIFICATION TEXT,
@@ -107,7 +113,7 @@ def create_table_features_extended_zscoring():
     try:
         cur = conn.cursor()
         cur.execute(f"""
-    CREATE TABLE IF NOT EXISTS FeaturesExtendedZScoring (
+        CREATE TABLE IF NOT EXISTS {WORKING_TABLE1} (
         SONG_NAME      TEXT,
         SONG_GENRE     TEXT,
         CLASSIFICATION TEXT,
