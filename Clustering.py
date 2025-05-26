@@ -1,12 +1,16 @@
 
+import time
 import numpy as np
 import ConnectionDB as DB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from annoy import AnnoyIndex
 
 K_MAX = 20
+N_TREES = 20            # Number of trees for Annoy index
+METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
@@ -123,6 +127,18 @@ def split_data():
     print(f"Split data into {len(X_train)} training and {len(X_test)} testing samples.")
     return (X_train, X_test, y_train, y_test,
             names_test, genres_test, le)
+
+def build_annoy_index(X_train, n_trees=N_TREES, metric=METRIC):
+    """Builds and returns an AnnoyIndex on X_train."""
+    d   = X_train.shape[1]
+    idx = AnnoyIndex(d, metric)
+    print(f"Building Annoy index with {n_trees} trees…")
+    t0 = time.time()
+    for i, vec in enumerate(X_train):
+        idx.add_item(i, vec.tolist())
+    idx.build(n_trees)
+    print(f"Index built in {time.time() - t0:.1f}s\n")
+    return idx
 
 def main():
     print("\n--- Split & Scale Data ---")
