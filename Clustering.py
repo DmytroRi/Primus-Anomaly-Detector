@@ -4,7 +4,7 @@ import ConnectionDB as DB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 K_MAX = 20
 TESTING_RATIO = 0.2
@@ -97,49 +97,35 @@ def output_results(results):
 
 
 def split_data():
-    """
-    Splits the dataset into training, validation, and test sets.
-    """
-    print("Splitting data into training, validation, and test sets...")
-    
+    """Loads rows from DB, extracts features & labels, splits, and scales."""
     rows = DB.upload_data_from_db()
+    # rows: (song_name, song_genre, dummy_class, mfcc0…mfcc12)
 
-    song_names  = [r[0] for r in rows]                              # shape (N,)
-    song_genres = [r[1] for r in rows]                              # shape (N,)           
-    labels = np.array([r[2] for r in rows], dtype=np.int32)         # shape (N,)
-    features = np.array([r[3:] for r in rows], dtype=np.float32)    # shape (N, 13)
+    raw_genres = [r[1] for r in rows]
+    features   = np.array([r[3:] for r in rows], dtype=np.float32)
 
     le = LabelEncoder()
-    y = le.fit_transform(song_genres)                               # Encode labels to integers
+    y  = le.fit_transform(raw_genres)
 
     X_train, X_test, y_train, y_test, \
-    names_train, names_test, \
-    genres_train, genres_test = train_test_split(
-    features,
-    y,
-    song_names,
-    song_genres,
-    test_size=TESTING_RATIO,  
-    stratify=y,            # keep distribution of classes
-    random_state=42
+    names_train, names_test, genres_train, genres_test = train_test_split(
+        features, y, [r[0] for r in rows], raw_genres,
+        test_size=TESTING_RATIO,
+        stratify=y,
+        random_state=42
     )
 
-    print("Data split completed.")
-    print(f"Train: {X_train.shape[0]} samples, Test: {X_test.shape[0]} samples.")
+    # scale features
+    scaler = StandardScaler().fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test  = scaler.transform(X_test)
 
-    results = compute_knn(
-        X_train, X_test,
-        y_train, y_test,
-        names_test=names_test,
-        genres_test=genres_test
-    )
-    
-    output_results(results)
-
-    pass
+    print(f"Split data into {len(X_train)} training and {len(X_test)} testing samples.")
+    return (X_train, X_test, y_train, y_test,
+            names_test, genres_test, le)
 
 def main():
-     print("\n--- Split & Scale Data ---")
+    print("\n--- Split & Scale Data ---")
     X_train, X_test, y_train, y_test, names_test, genres_test, le = split_data()
 
     print("\n--- Build Index ---")
