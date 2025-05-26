@@ -169,6 +169,19 @@ def evaluate_best_k(idx, X_test, y_train, y_test, k_max=K_MAX):
     print(f"\nBest k = {best_k} with accuracy {best_acc:.4f}\n")
     return best_k, best_acc, y_best
 
+def output_detailed_report(y_best, y_test, le, names_test, genres_test):
+    """Prints classification report, confusion matrix and one sample mismatch."""
+    print("Classification Report:")
+    print(classification_report(y_test, y_best, target_names=le.classes_))
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_best))
+
+    # show first misclassified example
+    for name, true_lab, pred_lab in zip(names_test, y_test, y_best):
+        if true_lab != pred_lab:
+            print(f"First misclassified: {name} -> true={le.classes_[true_lab]}, pred={le.classes_[pred_lab]}")
+            break
+
 def main():
     print("\n--- Split & Scale Data ---")
     X_train, X_test, y_train, y_test, names_test, genres_test, le = split_data()
