@@ -22,6 +22,15 @@ The classification of music genres is subjective! There are no strict rules that
 For research purposes, I will use classifications from Wikipedia as well as my own experience as a music enthusiast. Over the past six years, I’ve recorded details of more than 300 albums in my personal Excel table — and I’m still adding to it. 
 
 ### Progress
+#### 03.05.2025
 The Purity value by segmentation strategy and methods as of 03.05.2025:
 
-![Plot](/stats/20250503.png)
+![Plot](/stats/20250503.png)    
+
+#### 26.05.2025
+Precision by Number of Neighbors (k) as of 26.05.2025:   
+![Plot](/stats/20250526.png)   
+The highest precision value is 48.57%. The next steps are:
+  - Compute the recall value
+  - Compute the confusion matrix
+  - Validate the algorithm with a more distinct dataset
