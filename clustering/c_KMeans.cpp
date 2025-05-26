@@ -5,17 +5,245 @@
 #include "c_KMeans.h"
 #include "constants.h"
 
-c_KMeans::c_KMeans()
+c_AlgorithmBase::c_AlgorithmBase()
 :	m_bTerminated		{false}
 ,	m_i4ClusterNumber	{NUM_OF_CLUSTERS}
+{}
+
+bool c_AlgorithmBase::bReadData()
+{
+	std::cout<<"Loading data from dataset...\n";
+
+	std::ifstream in{SRC_FILE};
+	if (!in.is_open())
+	{
+		std::cout<<"Failed to open '"<< SRC_FILE<< "'.\n";
+		return false;
+	}
+
+    json j; 
+    in >> j;
+
+	for (auto const & [genreName, songsObj] : j.items())
+	{
+		for (auto const & [songName, segmentsObj] : songsObj.items())
+		{
+			s_Song sSong;
+			sSong.eGenre = eStrGenreToEnum(genreName);
+			sSong.strName = songName;
+			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
+			sSong.bWasChanged = false;
+
+			auto itFramesStart = segmentsObj.find("frames");
+			if (itFramesStart == segmentsObj.end() || !itFramesStart->is_array())
+			{
+				std::cout << "Missing or invalid 'frames' array for " << genreName << "/" << songName << "\n";
+				return false;
+			}
+
+			for (auto const& features : *itFramesStart)
+			{
+                if (!features.is_array() || features.size() != NUM_OF_FEATURES)
+				{
+					std::cout << "Expected " << NUM_OF_FEATURES << "-element array for " << genreName << "/" << songName << "\n";
+					return false;
+				}
+
+				std::array<double,NUM_OF_FEATURES> aFeaturesToSave;
+				for (int i {0}; i < NUM_OF_FEATURES; i++)
+                    aFeaturesToSave[i] = features[i].get<double>();
+
+				sSong.vecSegments.push_back(aFeaturesToSave);
+			}
+
+			m_vecDataSet.push_back(std::move(sSong));
+		}
+	}
+
+	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
+
+	in.close();
+	return true;
+}
+
+bool c_AlgorithmBase::bWriteData() const
+{
+	nlohmann::json j;
+    for (auto const& song : m_vecDataSet)
+	{
+        j[std::to_string(song.i4Centroid)].push_back({
+            {"name ",  song.strName},
+            {"genre", sEnumGenreToStr(song.eGenre)}
+        });
+    }
+	std::ofstream(RES_FILE) << j.dump(2);
+	return true;
+}
+
+double c_AlgorithmBase::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
+{
+	double f8Sum{0};
+	for (int i{ 0 }; i < NUM_OF_FEATURES; i++)
+	{
+		double dist {a[i]-b[i]};
+#ifdef WEIGHTED_MFCCS
+		i < NUM_OF_MFCCS ? f8Sum += dist * dist * aWeightsMFCCs[i]
+					     : f8Sum += dist * dist;
+#else
+		f8Sum += dist * dist;
+#endif // WEIGHTED_MFCCS
+	}
+	if(isSqrt)
+		return sqrt(f8Sum);
+	return f8Sum;
+}
+
+void c_AlgorithmBase::NormalizeDataZScore()
+{
+	size_t i4NumOfSegments{ 0 };
+	for (auto const & song : m_vecDataSet)
+		i4NumOfSegments += song.vecSegments.size();
+
+	std::array<double, NUM_OF_MFCCS> aSum{};
+	aSum.fill(0.0);
+	std::array<double, NUM_OF_MFCCS> aSumPow2{};
+	aSumPow2.fill(0.0);
+
+	for (auto const & song : m_vecDataSet)
+		for (auto const & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+			{
+				aSum[i] += mfcc[i];
+				aSumPow2[i] += mfcc[i] * mfcc[i];
+			}
+
+	std::array<double, NUM_OF_MFCCS> aMean{};
+	std::array<double, NUM_OF_MFCCS> aStdDev{};
+	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+	{
+		aMean[i] = aSum[i] / static_cast<double>(i4NumOfSegments);
+		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
+	}
+
+	// Normalize and save the MFCCs
+	for (auto & song : m_vecDataSet)
+		for (auto & mfcc : song.vecSegments)
+			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
+				if (aStdDev[i] != 0.0)
+					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
+				else
+					mfcc[i] = 0.0;
+
+	// Save the normalized MFCCs to the extended features vector
+	for (auto & song : m_vecDataSet)
+			for (auto const & mfcc : song.vecSegments)
+			{
+				song.vecFeatures.push_back({mfcc[0], mfcc[1], mfcc[2],mfcc[3],
+											mfcc[4], mfcc[5], mfcc[6],mfcc[7],
+											mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12],});
+			}
+
+	return;
+}
+
+void c_AlgorithmBase::CalculateDeltaAndDeltaDelta()
+{
+	for (auto & song : m_vecDataSet)
+	{
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
+		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
+
+		auto & M {song.vecSegments};
+		size_t N {song.vecSegments.size()};
+
+		// Resize delta and delta-delta vectors
+		vecDelta.resize(N);
+		vecDeltaDelta.resize(N);
+
+		// Compute delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1 {i == 0 ? 0 : i - 1};
+			int ip1 {i + 1 < N ? i + 1 : i};
+            for (int d = 0; d < NUM_OF_MFCCS; ++d)
+                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
+        }
+
+		// Compute delta-delta coefficients
+		for (int i = 0; i < N; ++i)
+		{
+			int im1{ i == 0 ? 0 : i - 1 };
+			int ip1{ i + 1 < N ? i + 1 : i };
+			for (int d = 0; d < NUM_OF_MFCCS; ++d)
+				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
+		}
+
+		// Append delta and delta-delta coefficients to the features
+		for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDelta[i][j]);
+			for (int j = 0; j < NUM_OF_MFCCS; ++j)
+				song.vecFeatures[i].push_back(vecDeltaDelta[i][j]);
+		}
+
+	}
+	return;
+}
+
+std::tm c_AlgorithmBase::GetCurrentTime() const
+{
+	auto now   = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_t);							// convert to local time zone
+	return now_tm;
+}
+
+std::string c_AlgorithmBase::sEnumGenreToStr(const e_Genres & eGenre) const
+{
+	switch (eGenre)
+	{
+	case e_Genres::ALTERNATIVE_METAL:	return "Alternative metal";
+	case e_Genres::BLACK_METAL:			return "Black metal";
+	case e_Genres::DEATH_METAL:			return "Death metal";
+	case e_Genres::CLASSIC_HEAVY_METAL:	return "Classic heavy metal";
+	case e_Genres::HARD_ROCK:			return "Hard rock";
+	case e_Genres::NU_METAL:			return "Nu metal";
+	case e_Genres::THRASH_METAL:		return "Thrash metal";
+	case e_Genres::PRIMUS:				return "Primus";
+
+	default:							return "Undefined";
+	}
+}
+
+e_Genres c_AlgorithmBase::eStrGenreToEnum(const std::string & sGenre) const
+{
+	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
+		return e_Genres::ALTERNATIVE_METAL;
+	else if(sGenre == "Black metal" || sGenre == "black_metal")
+		return e_Genres::BLACK_METAL;
+	else if(sGenre == "Death metal" || sGenre == "death_metal")
+		return e_Genres::DEATH_METAL;
+	else if(sGenre == "Classic heavy metal" || sGenre == "classic_heavy_metal")
+		return e_Genres::CLASSIC_HEAVY_METAL;
+	else if(sGenre == "Hard rock" || sGenre == "hard_rock")
+		return e_Genres::HARD_ROCK;
+	else if(sGenre == "Nu metal" || sGenre == "nu_metal")
+		return e_Genres::NU_METAL;
+	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
+		return e_Genres::THRASH_METAL;
+	else if(sGenre == "Primus" || sGenre == "primus")
+		return e_Genres::PRIMUS;
+	else
+		return e_Genres::UNDEFINED;
+}
+
+c_KMeans::c_KMeans()
+:	c_AlgorithmBase()
 {
 	m_aMaxMFCC.fill(std::numeric_limits<double>::lowest());
 	m_aMinMFCC.fill(std::numeric_limits<double>::infinity());
-}
-
-c_KMeans::~c_KMeans()
-{
-
 }
 
 void c_KMeans::RunAlgorithm()
@@ -89,54 +317,7 @@ void c_KMeans::RunAlgorithm()
 	}
 }
 
-bool c_KMeans::bReadData()
-{
-	std::cout<<"Loading data from dataset...\n";
 
-	std::ifstream in{SRC_FILE};
-	if (!in.is_open())
-	{
-		std::cout<<"Failed to open '"<< SRC_FILE<< "'.\n";
-		return false;
-	}
-
-    json j; 
-    in >> j;
-
-	for (auto const & [genreName, songsObj] : j.items())
-	{
-		for (auto const & [songName, segmentsObj] : songsObj.items())
-		{
-			s_Song sSong;
-			sSong.eGenre = eStrGenreToEnum(genreName);
-			sSong.strName = songName;
-			sSong.i4Centroid = NUM_OF_CLUSTERS;			// starting dummy value
-			sSong.bWasChanged = false;
-
-			for (auto const& [segKey, mfccArr] : segmentsObj.items())
-			{
-                if (!mfccArr.is_array() || mfccArr.size() != NUM_OF_MFCCS)
-				{
-					std::cout << "Expected 13-element array for " << genreName << "/" << songName << "/" << segKey;
-					return false;
-				}
-
-				std::array<double,NUM_OF_MFCCS> mfcc;
-				for (int i {0}; i < NUM_OF_MFCCS; i++)
-                    mfcc[i] = mfccArr[i].get<double>();
-
-				sSong.vecSegments.push_back(mfcc);
-			}
-
-			m_vecDataSet.push_back(std::move(sSong));
-		}
-	}
-
-	std::cout << "Loaded " << m_vecDataSet.size() << " songs.\n";
-
-	in.close();
-	return true;
-}
 
 bool c_KMeans::bInitCentroids()
 {
@@ -184,12 +365,18 @@ bool c_KMeans::bInitCentroids()
     }
 #else	// random initialization
 	FindMFCCsBounds();
+	m_vecCentroids.resize(NUM_OF_CLUSTERS);
+	m_sLog.vecInitCentroids.resize(NUM_OF_CLUSTERS);
 	for (int c {0}; c < NUM_OF_CLUSTERS; ++c)
 	{
+		m_vecCentroids[c].resize(NUM_OF_FEATURES);
+		m_sLog.vecInitCentroids[c].resize(NUM_OF_FEATURES);
 		for (int d {0}; d < NUM_OF_MFCCS; ++d)
 		{
+			// Generate random value between min and max
 			std::uniform_real_distribution<double> dist(m_aMinMFCC[d], m_aMaxMFCC[d]);
-			m_vecCentroids[c][d] = m_sLog.aInitCentroids[c][d] = dist(gen);
+			// Assign random value to centroid
+			m_vecCentroids[c][d] = m_sLog.vecInitCentroids[c][d] = dist(gen);
 		}
 	}
 #endif	//D2_SAMPLING
@@ -271,20 +458,6 @@ bool c_KMeans::bCalculateCenters()
 	return true;
 }
 
-bool c_KMeans::bWriteData() const
-{
-	nlohmann::json j;
-    for (auto const& song : m_vecDataSet)
-	{
-        j[std::to_string(song.i4Centroid)].push_back({
-            {"name ",  song.strName},
-            {"genre", sEnumGenreToStr(song.eGenre)}
-        });
-    }
-	std::ofstream(RES_FILE) << j.dump(2);
-	return true;
-}
-
 bool c_KMeans::bIsConvergenceAchieved() const
 {
 	for (auto const & song : m_vecDataSet)
@@ -310,99 +483,6 @@ void c_KMeans::FindMFCCsBounds()
 	}
 }
 
-void c_KMeans::NormalizeDataZScore()
-{
-	size_t i4NumOfSegments{ 0 };
-	for (auto const & song : m_vecDataSet)
-		i4NumOfSegments += song.vecSegments.size();
-
-	std::array<double, NUM_OF_MFCCS> aSum{};
-	aSum.fill(0.0);
-	std::array<double, NUM_OF_MFCCS> aSumPow2{};
-	aSumPow2.fill(0.0);
-
-	for (auto const & song : m_vecDataSet)
-		for (auto const & mfcc : song.vecSegments)
-			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-			{
-				aSum[i] += mfcc[i];
-				aSumPow2[i] += mfcc[i] * mfcc[i];
-			}
-
-	std::array<double, NUM_OF_MFCCS> aMean{};
-	std::array<double, NUM_OF_MFCCS> aStdDev{};
-	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-	{
-		aMean[i] = aSum[i] / static_cast<double>(i4NumOfSegments);
-		aStdDev[i] = sqrt((aSumPow2[i] / static_cast<double>(i4NumOfSegments)) - (aMean[i] * aMean[i]));
-	}
-
-	// Normalize and save the MFCCs
-	for (auto & song : m_vecDataSet)
-		for (auto & mfcc : song.vecSegments)
-			for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-				if (aStdDev[i] != 0.0)
-					mfcc[i] = (mfcc[i] - aMean[i]) / aStdDev[i];
-				else
-					mfcc[i] = 0.0;
-
-	// Save the normalized MFCCs to the extended features vector
-	for (auto & song : m_vecDataSet)
-			for (auto const & mfcc : song.vecSegments)
-			{
-				song.vecFeatures.push_back({mfcc[0], mfcc[1], mfcc[2],mfcc[3],
-											mfcc[4], mfcc[5], mfcc[6],mfcc[7],
-											mfcc[8], mfcc[9], mfcc[10], mfcc[11], mfcc[12],});
-			}
-
-	return;
-}
-
-void c_KMeans::CalculateDeltaAndDeltaDelta()
-{
-	for (auto & song : m_vecDataSet)
-	{
-		std::vector<std::array<double, NUM_OF_MFCCS>> vecDelta;
-		std::vector<std::array<double, NUM_OF_MFCCS>> vecDeltaDelta;
-
-		auto & M {song.vecSegments};
-		size_t N {song.vecSegments.size()};
-
-		// Resize delta and delta-delta vectors
-		vecDelta.resize(N);
-		vecDeltaDelta.resize(N);
-
-		// Compute delta coefficients
-		for (int i = 0; i < N; ++i)
-		{
-			int im1 {i == 0 ? 0 : i - 1};
-			int ip1 {i + 1 < N ? i + 1 : i};
-            for (int d = 0; d < NUM_OF_MFCCS; ++d)
-                vecDelta[i][d] = ( M[ip1][d] - M[im1][d] ) * 0.5;
-        }
-
-		// Compute delta-delta coefficients
-		for (int i = 0; i < N; ++i)
-		{
-			int im1{ i == 0 ? 0 : i - 1 };
-			int ip1{ i + 1 < N ? i + 1 : i };
-			for (int d = 0; d < NUM_OF_MFCCS; ++d)
-				vecDeltaDelta[i][d] = (vecDelta[ip1][d] - vecDelta[im1][d]) * 0.5;
-		}
-
-		// Append delta and delta-delta coefficients to the features
-		for (int i = 0; i < N; ++i)
-		{
-			for (int j = 0; j < NUM_OF_MFCCS; ++j)
-				song.vecFeatures[i].push_back(vecDelta[i][j]);
-			for (int j = 0; j < NUM_OF_MFCCS; ++j)
-				song.vecFeatures[i].push_back(vecDeltaDelta[i][j]);
-		}
-
-	}
-	return;
-}
-
 void c_KMeans::LogProtocol()
 {
 	std::tm end {GetCurrentTime()};
@@ -415,7 +495,7 @@ void c_KMeans::LogProtocol()
     }
 
 	out<<"\n=== K-Means Clustering Algorithm ===\n";
-	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out<<"Source file:\t\t\t" << SRC_FILE << "\n";
 	out<<"Execution started at:\t"<< std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Execution ended at:\t\t"<< std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
 	out<<"Initial centroids:\n";
@@ -452,58 +532,6 @@ void c_KMeans::LogProtocol()
 	std::cout << "Log saved to " << LOG_FILE << ".\n";
 }
 
-std::string c_KMeans::sEnumGenreToStr(const e_Genres & eGenre) const
-{
-	switch (eGenre)
-	{
-	case e_Genres::ALTERNATIVE_METAL:	return "Alternative metal";
-	case e_Genres::BLACK_METAL:			return "Black metal";
-	case e_Genres::DEATH_METAL:			return "Death metal";
-	case e_Genres::CLASSIC_HEAVY_METAL:	return "Classic heavy metal";
-	case e_Genres::HARD_ROCK:			return "Hard rock";
-	case e_Genres::NU_METAL:			return "Nu metal";
-	case e_Genres::THRASH_METAL:		return "Thrash metal";
-	case e_Genres::PRIMUS:				return "Primus";
-
-	default:							return "Undefined";
-	}
-}
-
-e_Genres c_KMeans::eStrGenreToEnum(const std::string & sGenre) const
-{
-	if(sGenre == "Alternative metal" || sGenre == "alternative_metal")
-		return e_Genres::ALTERNATIVE_METAL;
-	else if(sGenre == "Black metal" || sGenre == "black_metal")
-		return e_Genres::BLACK_METAL;
-	else if(sGenre == "Death metal" || sGenre == "death_metal")
-		return e_Genres::DEATH_METAL;
-	else if(sGenre == "Classic heavy metal" || sGenre == "classic_heavy_metal")
-		return e_Genres::CLASSIC_HEAVY_METAL;
-	else if(sGenre == "Hard rock" || sGenre == "hard_rock")
-		return e_Genres::HARD_ROCK;
-	else if(sGenre == "Nu metal" || sGenre == "nu_metal")
-		return e_Genres::NU_METAL;
-	else if(sGenre == "Thrash metal" || sGenre == "thrash_metal")
-		return e_Genres::THRASH_METAL;
-	else if(sGenre == "Primus" || sGenre == "primus")
-		return e_Genres::PRIMUS;
-	else
-		return e_Genres::UNDEFINED;
-}
-
-double c_KMeans::f8CalculateEuclideanDistance(const std::vector<double> & a, const std::vector<double> & b, const bool isSqrt /*=false*/) const
-{
-	double f8Sum{0};
-	for (int i{ 0 }; i < NUM_OF_MFCCS; i++)
-	{
-		double dist {a[i]-b[i]};
-		f8Sum += dist*dist;
-	}
-	if(isSqrt)
-		return sqrt(f8Sum);
-	return f8Sum;
-}
-
 double c_KMeans::f8CalculatePurity() const
 {
 	std::array<std::array<size_t,NUM_OF_CLUSTERS>,NUM_OF_CLUSTERS> aCounts{};
@@ -528,11 +556,250 @@ double c_KMeans::f8CalculatePurity() const
 	return static_cast<double>(i4Total) / m_vecDataSet.size();
 }
 
-std::tm c_KMeans::GetCurrentTime() const
+c_KNN::c_KNN()
+:	c_AlgorithmBase()
+,	m_f8TrainRatio{ TRAIN_RATIO }
 {
-	auto now   = std::chrono::system_clock::now();
-    auto now_t = std::chrono::system_clock::to_time_t(now);	// get current time
-    std::tm now_tm;
-    localtime_s(&now_tm, &now_t);							// convert to local time zone
-	return now_tm;
+}
+
+void c_KNN::RunAlgorithm()
+{
+	m_sLog.tStartOfExecution = GetCurrentTime();
+	std::cout<<"Start of the k-nearest neighbors Algorithm...\n";
+	
+	if(bReadData())
+		std::cout<<"Dataset successfully loaded.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout<<"Failed to load the dataset. Terminating program.\n";
+	}
+
+	// Preapare the features
+	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
+
+	// Split the dataset into training and testing sets
+	if(splitDataSet())
+		std::cout << "Dataset successfully split into training and testing sets.\n";
+	else
+	{
+		m_bTerminated = true;
+		std::cout << "Failed to split the dataset. Terminating program.\n";
+	}
+
+	if (m_bTerminated)
+		return;
+
+	// Predict the genres of the songs in the training set
+	predictAll();
+	std::cout << "Predictions completed.\n";
+
+	// Calculate the purity of the training set
+	m_sLog.vecPurity.push_back(f8CalculatePurity());
+
+	// Log the results
+	LogProtocol();
+
+	return;
+}
+
+bool c_KNN::splitDataSet()
+{
+	std::cout << "Splitting dataset into training and testing sets...\n";
+	std::vector<s_Song> vecShuffled{m_vecDataSet};
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::shuffle(vecShuffled.begin(), vecShuffled.end(), gen);
+
+	size_t i4TrainSize = static_cast<size_t>(vecShuffled.size() * m_f8TrainRatio);
+
+	m_vecTrainSet.assign(vecShuffled.begin(), vecShuffled.begin() + i4TrainSize);
+	m_vecTestSet.assign(vecShuffled.begin() + i4TrainSize, vecShuffled.end());
+
+	if (m_vecTrainSet.empty() || m_vecTestSet.empty())
+		return false;
+
+	return true;
+}
+
+void c_KNN::optimizeValueK(int i4MaxK, int i4MinK, int i4Step)
+{
+	if (i4MaxK < i4MinK || i4Step <= 0)
+	{
+		std::cout << "Invalid range for k. Please check the values.\n";
+		return;
+	}
+
+	bReadData();
+	NormalizeDataZScore();
+	CalculateDeltaAndDeltaDelta();
+	splitDataSet();
+	
+	std::cout << "Optimizing the value of k...\n";
+	for (int i4K {i4MinK}; i4K <= i4MaxK; i4K += i4Step)
+	{
+		predictAll(i4K);
+		m_sLog.vecPurity.push_back(f8CalculatePurity());
+	}
+
+	std::cout << "Purity values for different k:\n";
+	for (int i4K{ i4MinK }; i4K <= i4MaxK; i4K += i4Step)
+	{
+		std::cout << "k = " << i4K << ": " << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK] << "\n";
+	}
+
+	LogResearchResults();
+	return;
+}
+
+void c_KNN::predictAll(int i4Neighboor/*=0*/)
+{
+	std::cout << "Predicting genres for the training set...\n";
+
+	for (auto const& song : m_vecTestSet) {
+        e_Genres pred = predict(song, i4Neighboor);
+        m_vecPredictions.push_back(pred);
+    }
+}
+
+e_Genres c_KNN::predict(const s_Song & song, int i4Neighboor)
+{
+	// Calculate the mean of the requested song
+	std::vector<double> vecSongMean(NUM_OF_FEATURES, 0.0);
+	for (auto const & seg : song.vecFeatures)
+		for (size_t d = 0; d < NUM_OF_FEATURES; ++d)
+			vecSongMean[d] += seg[d];
+
+	double invQ = 1.0 / static_cast<double>(song.vecFeatures.size());
+	for (size_t d = 0; d < NUM_OF_FEATURES; ++d) vecSongMean[d] *= invQ;
+
+	// Calculate distances to all training songs
+	std::vector<std::pair<double, e_Genres>> distances;
+	for (auto const & trainSong : m_vecTrainSet)
+	{
+		// Calculate the mean of the training song
+		std::vector<double> vecTrainSongMean(NUM_OF_FEATURES, 0.0);
+		for (auto const & seg : trainSong.vecFeatures)
+			for (size_t d = 0; d < NUM_OF_FEATURES; ++d)
+				vecTrainSongMean[d] += seg[d];
+
+		double invQ = 1.0 / static_cast<double>(trainSong.vecFeatures.size());
+		for (size_t d = 0; d < NUM_OF_FEATURES; ++d) vecTrainSongMean[d] *= invQ;
+
+		// Calculate the distance
+		double distance = f8CalculateEuclideanDistance(vecSongMean, vecTrainSongMean);
+		distances.emplace_back(distance, trainSong.eGenre);
+	}
+
+	// Choose the number of neighbors to consider
+	int i4NeighboorCount{NEIGHBOUR_COUNT};
+	if (i4Neighboor != NEIGHBOR_COUNT_DUMMY)
+		i4NeighboorCount = i4Neighboor;
+
+
+	// Sort distances
+	if (i4NeighboorCount < distances.size())
+	{
+		std::nth_element(
+			distances.begin(),
+			distances.begin() + i4NeighboorCount,
+			distances.end(),
+			[](auto & a, auto & b) { return a.first < b.first; }
+		);
+	}
+
+	std::array<size_t, NUM_OF_CLUSTERS> votes{};
+	votes.fill(0);
+	size_t limit = std::min(static_cast<size_t>(i4NeighboorCount), distances.size());
+	for (size_t i = 0; i < limit; ++i)
+		votes[static_cast<int>(distances[i].second)]++;
+
+	// Find the genre with the most votes
+	long long i8BestIdx = std::distance(
+		votes.begin(),
+		std::max_element(votes.begin(), votes.end())
+	);
+
+	return static_cast<e_Genres>(i8BestIdx);
+}
+
+void c_KNN::LogProtocol()
+{
+	std::tm end{ GetCurrentTime() };
+
+	std::ofstream out{ LOG_FILE, std::ios::app };
+	if (!out)
+	{
+		std::cout << "Error: could not open " << LOG_FILE << " for logging\n";
+		return;
+	}
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Execution started at:\t" << std::put_time(&m_sLog.tStartOfExecution, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Execution ended at:\t\t" << std::put_time(&end, "%Y-%m-%d %H:%M:%S") << "\n";
+	out << "Value of k:\t\t\t\t" << NEIGHBOUR_COUNT << "\n";
+	out << "Achieved purity:\t\t" << std::fixed << std::setprecision(4) << m_sLog.vecPurity[0] << "\n";
+	out << "====================================\n";
+
+	out.close();
+	std::cout << "Log saved to " << LOG_FILE << ".\n";
+}
+
+double c_KNN::f8CalculatePurity()
+{
+	if (m_vecTrainSet.empty())
+		return 0.0;
+
+	int i4CorrectPredictions{ 0 };
+	for (size_t i{ 0 }; i < m_vecTestSet.size(); i++)
+	{
+		if (m_vecTestSet[i].eGenre == m_vecPredictions[i])
+			i4CorrectPredictions++;
+	}
+
+	// Clear the predictions vector
+    m_vecPredictions.clear();
+
+	return static_cast<double>(i4CorrectPredictions)/m_vecTestSet.size();
+}
+
+void c_KNN::LogResearchResults(int i4MaxK, int i4MinK, int i4Step)
+{
+	std::ofstream out{LOG_RESEARCH, std::ios::app};
+	if (!out)
+	{
+        std::cout << "Error: could not open " << LOG_RESEARCH << " for logging\n";
+        return;
+    }
+
+	out << "\n=== k-Nearest Neighbors Algorithm ===\n";
+	out << "Source file:\t\t\t" << SRC_FILE << "\n";
+	out << "Number of features:\t\t" << NUM_OF_FEATURES << "\n";
+	out << "Number of MFCCs:\t\t" << NUM_OF_MFCCS << "\n";
+	out << "Number of clusters:\t\t" << NUM_OF_CLUSTERS << "\n";
+	out << "Train ratio:\t\t\t" << m_f8TrainRatio << "\n";
+    #ifdef WEIGHTED_MFCCS
+    out << "Weighted MFCCs:\t\t\tYes\n";
+    #else
+    out << "Weighted MFCCs:\t\t\tNo\n";
+    #endif
+	out << "Results:\nValues of k:\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << i4K;
+	}
+	out << "\n";
+	out << "Purity values: \t\t\t";
+	for (int i4K = i4MinK; i4K <= i4MaxK; i4K += i4Step)
+	{
+		out << std::setw(8) << std::fixed << std::setprecision(4) << m_sLog.vecPurity[i4K - i4MinK];
+	}
+	out << "\n";
+	out << "====================================\n";
+	out.close();
+	std::cout << "Research results saved to " << LOG_RESEARCH << ".\n";
+	return;
 }

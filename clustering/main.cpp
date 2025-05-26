@@ -33,8 +33,9 @@ std::vector				vec
 
 int main()
 {
-	c_KMeans cAlg;
-	cAlg.RunAlgorithm();
+	c_KNN cAlg;
+	cAlg.optimizeValueK(30, 1, 1);
+	//cAlg.RunAlgorithm();
 
 	return 0;
 }
