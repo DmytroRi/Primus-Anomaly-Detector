@@ -2,6 +2,7 @@
 import time
 import numpy as np
 import ConnectionDB as DB
+import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -88,13 +89,38 @@ def output_detailed_report(y_best, y_test, le, names_test, genres_test):
     print("Classification Report:")
     print(classification_report(y_test, y_best, target_names=le.classes_))
     print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_best))
+    cm = confusion_matrix(y_test, y_best)
+    print(cm)
+    plot_confusion_matrix(cm, classes=le.classes_)
 
     # show first misclassified example
     for name, true_lab, pred_lab in zip(names_test, y_test, y_best):
         if true_lab != pred_lab:
             print(f"First misclassified: {name} -> true={le.classes_[true_lab]}, pred={le.classes_[pred_lab]}")
             break
+
+def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
+    """Plots a confusion matrix."""
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest')
+    ax.figure.colorbar(im, ax=ax)
+
+    ax.set(
+        xticks=range(len(classes)),
+        yticks=range(len(classes)),
+        xticklabels=classes,
+        yticklabels=classes,
+        ylabel='True label',
+        xlabel='Predicted label',
+        title='Confusion Matrix'
+    )
+
+    # Rotate tick labels for readability
+    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+    
+    plt.tight_layout()
+    plt.show()
 
 def main():
     print("\n--- Split & Scale Data ---")
