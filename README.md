@@ -27,6 +27,9 @@ The Purity value by segmentation strategy and methods as of 03.05.2025:
 
 ![Plot](/stats/20250503.png)    
 
+#### 20.05.2025
+Due to the complexity of implementing algorithms in C++, it would be more efficient to continue the work using Python and use existing solutions from different libraries. Additionally, given the large dataset because of the new framing strategy, the data should be stored in a local SQLite database for easier access and management.   
+
 #### 26.05.2025
 Precision by Number of Neighbors (k) as of 26.05.2025:   
 ![Plot](/stats/20250526.png)   
