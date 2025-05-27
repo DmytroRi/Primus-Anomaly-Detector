@@ -9,13 +9,14 @@ WORKING_TABLE = "FeaturesExtended"         # Working table name for MFCC feature
 TABLES NAMING CONVENTION:
 [FRAME_LENGTH][HOP_LENGTH]_[DELTA_TYPE]_[ADDITIONAL_INFO]
 """
+WORKING_TABLE0 = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
 WORKING_TABLE1 = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
 ):
     """
-    Inserts multiple MFCC frames into FeaturesExtended in one batch.
+    Inserts multiple MFCC frames into WORKING_TABLE0 in one batch.
 
     Args:
       records: an iterable of tuples
@@ -36,7 +37,7 @@ def insert_in_DB(
         # turn off autocommit so all INSERTs live in a single transaction
         cur.execute("BEGIN")
         cur.executemany(f"""
-            INSERT INTO {WORKING_TABLE1} (
+            INSERT INTO {WORKING_TABLE0} (
                 SONG_NAME,
                 SONG_GENRE,
                 CLASSIFICATION,
@@ -80,13 +81,13 @@ def reset_DB():
 
 def create_table_features_extended():
     """
-    Creates the WORKING_TABLE table in the database.
+    Creates the WORKING_TABLE0 table in the database.
     """
     conn = sqlite3.connect(DB_PATH)
     try:
         cur = conn.cursor()
         cur.execute(f"""
-        CREATE TABLE IF NOT EXISTS {WORKING_TABLE1} (
+        CREATE TABLE IF NOT EXISTS {WORKING_TABLE0} (
         SONG_NAME      TEXT,
         SONG_GENRE     TEXT,
         CLASSIFICATION TEXT,
@@ -201,7 +202,7 @@ def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, floa
     """
     Uploads data from the specified table in the database.
     """
-    print(f"Uploading data from table {WORKING_TABLE}...")
+    print(f"Uploading data from table {WORKING_TABLE0}...")
     conn = sqlite3.connect(DB_PATH)
     cur  = conn.cursor()
     cur.execute(f"""
@@ -210,9 +211,9 @@ def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, floa
                 "MFCC0",    "MFCC1",    "MFCC2",    "MFCC3",    "MFCC4",
                 "MFCC5",    "MFCC6",    "MFCC7",    "MFCC8",
                 "MFCC9",    "MFCC10",   "MFCC11",   "MFCC12"
-                FROM {WORKING_TABLE};
+                FROM {WORKING_TABLE0};
                 """)
     rows = cur.fetchall()
     conn.close()
-    print(f"Uploaded {len(rows)} rows from {WORKING_TABLE}.")
+    print(f"Uploaded {len(rows)} rows from {WORKING_TABLE0}.")
     return rows
