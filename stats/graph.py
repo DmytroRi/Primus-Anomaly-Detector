@@ -57,4 +57,35 @@ def KNN():
     plt.tight_layout()
     plt.show()
 
-KNN()
+def KNN_v1():
+    # Data
+    k_values = list(range(1, 71))
+    precision = [0.3829, 0.3926, 0.4158, 0.4313, 0.4413, 0.4486, 0.4541, 0.4586, 0.4624, 0.4654,
+                 0.4679, 0.4702, 0.4720, 0.4739, 0.4753, 0.4766, 0.4777, 0.4787, 0.4795, 0.4804,
+                 0.4811, 0.4815, 0.4821, 0.4824, 0.4827, 0.4830, 0.4835, 0.4836, 0.4838, 0.4841,
+                 0.4843, 0.4846, 0.4847, 0.4849, 0.4850, 0.4851, 0.4852, 0.4853, 0.4854, 0.4853,
+                 0.4854, 0.4856, 0.4855, 0.4855, 0.4856, 0.4856, 0.4857, 0.4857, 0.4855, 0.4855,
+                 0.4856, 0.4855, 0.4855, 0.4855, 0.4855, 0.4854, 0.4855, 0.4855, 0.4855, 0.4854,
+                 0.4854, 0.4852, 0.4852, 0.4851, 0.4850, 0.4849, 0.4848, 0.4847, 0.4846, 0.4846]
+    
+     # Find max
+    max_prec = max(precision)
+    max_k = k_values[precision.index(max_prec)]
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_values, precision, label='Precision')
+    plt.plot(max_k, max_prec, 'ro', label=f'Max Precision: {max_prec:.4f} at k={max_k}')
+    plt.axhline(y=max_prec, color='r', linestyle='--', label='Max Precision Line')
+    plt.title('k-Nearest Neighbors Precision vs. k')
+    plt.xlabel('k (Number of Neighbors)')
+    plt.ylabel('Precision')
+    plt.xticks(k_values, rotation=45)
+    plt.legend()
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+    pass
+
+
+KNN_v1()
