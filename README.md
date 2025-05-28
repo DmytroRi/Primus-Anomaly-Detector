@@ -39,7 +39,7 @@ The highest precision value is 48.57%. The next steps are:
   - Validate the algorithm with a more distinct dataset
 
 #### 27.05.2025
-The confsion Matrix as for 27.05.2025:
+The Confusion Matrix as for 27.05.2025:
 ![Plot](/stats/20250527cm.png)   
 >Detailed classification report:
 >
@@ -49,12 +49,7 @@ The confsion Matrix as for 27.05.2025:
 >      classic_heavy_metal       0.43      0.50      0.46    398556    
 >              death_metal       0.53      0.53      0.53    345131   
 >                hard_rock       0.47      0.47      0.47    345601   
->                 nu_metal       0.43      0.33      0.37    297358   
->              death_metal       0.53      0.53      0.53    345131   
->                hard_rock       0.47      0.47      0.47    345601   
->                 nu_metal       0.43      0.33      0.37    297358   
->                hard_rock       0.47      0.47      0.47    345601   
->                 nu_metal       0.43      0.33      0.37    297358   
+>                 nu_metal       0.43      0.33      0.37    297358      
 >                   primus       0.62      0.51      0.56    319524   
 >             thrash_metal       0.50      0.47      0.49    357040   
 >   
