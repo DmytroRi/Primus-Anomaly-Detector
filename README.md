@@ -27,6 +27,9 @@ The Purity value by segmentation strategy and methods as of 03.05.2025:
 
 ![Plot](/stats/20250503.png)    
 
+#### 20.05.2025
+Due to the complexity of implementing algorithms in C++, it would be more efficient to continue the work using Python and use existing solutions from different libraries. Additionally, given the large dataset because of the new framing strategy, the data should be stored in a local SQLite database for easier access and management.   
+
 #### 26.05.2025
 Precision by Number of Neighbors (k) as of 26.05.2025:   
 ![Plot](/stats/20250526.png)   
@@ -34,3 +37,28 @@ The highest precision value is 48.57%. The next steps are:
   - Compute the recall value
   - Compute the confusion matrix
   - Validate the algorithm with a more distinct dataset
+
+#### 27.05.2025
+The confsion Matrix as for 27.05.2025:
+![Plot](/stats/20250527cm.png)   
+>Detailed classification report:
+>
+>                            precision    recall  f1-score   support   
+>        alternative_metal       0.38      0.30      0.33    344077    
+>              black_metal       0.52      0.69      0.59    455874    
+>      classic_heavy_metal       0.43      0.50      0.46    398556    
+>              death_metal       0.53      0.53      0.53    345131   
+>                hard_rock       0.47      0.47      0.47    345601   
+>                 nu_metal       0.43      0.33      0.37    297358   
+>              death_metal       0.53      0.53      0.53    345131   
+>                hard_rock       0.47      0.47      0.47    345601   
+>                 nu_metal       0.43      0.33      0.37    297358   
+>                hard_rock       0.47      0.47      0.47    345601   
+>                 nu_metal       0.43      0.33      0.37    297358   
+>                   primus       0.62      0.51      0.56    319524   
+>             thrash_metal       0.50      0.47      0.49    357040   
+>   
+>                 accuracy                           0.49   2863161   
+>                macro avg       0.48      0.47      0.48   2863161   
+>             weighted avg       0.48      0.49      0.48   2863161
+>       
