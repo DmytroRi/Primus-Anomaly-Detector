@@ -9,8 +9,9 @@ WORKING_TABLE = "FeaturesExtended"         # Working table name for MFCC feature
 TABLES NAMING CONVENTION:
 [FRAME_LENGTH][HOP_LENGTH]_[DELTA_TYPE]_[ADDITIONAL_INFO]
 """
-WORKING_TABLE0 = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
-WORKING_TABLE1 = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
+WORKING_TABLE_EXTERN    = "fr20h10_nodelta_extern"                   # 20ms frame, 10ms hop, no delta features, no CMVN, external dataset
+WORKING_TABLE0          = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
+WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
