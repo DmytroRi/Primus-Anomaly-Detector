@@ -10,6 +10,7 @@ TABLES NAMING CONVENTION:
 [FRAME_LENGTH][HOP_LENGTH]_[DELTA_TYPE]_[ADDITIONAL_INFO]
 """
 WORKING_TABLE_EXTERN    = "fr20h10_nodelta_extern"                   # 20ms frame, 10ms hop, no delta features, no CMVN, external dataset
+WORKING_TABLE_EXTERN_EXT= "fr20h10_delta_deltadelta_extern"          # 20ms frame, 10ms hop, delta features, external dataset
 WORKING_TABLE0          = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
 WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
 
@@ -98,6 +99,43 @@ def create_table_features_extended():
         MFCC6          REAL, MFCC7  REAL, MFCC8  REAL,
         MFCC9          REAL, MFCC10 REAL, MFCC11 REAL,
         MFCC12         REAL
+        );
+        """)
+        conn.commit()
+        print("Table created successfully.")
+    except sqlite3.Error as e:
+        print(f"SQLite error during table creation: {e}")
+    finally:
+        conn.close()
+
+def create_table_features_extended_deltas():
+    """
+    Creates the WORKING_TABLE_EXTERN_EXT table in the database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+        CREATE TABLE IF NOT EXISTS {WORKING_TABLE_EXTERN_EXT} (
+        SONG_NAME      TEXT,
+        SONG_GENRE     TEXT,
+        CLASSIFICATION TEXT,
+        SEGMENT_ID     INTEGER PRIMARY KEY AUTOINCREMENT,
+        MFCC0          REAL, MFCC1  REAL, MFCC2  REAL,
+        MFCC3          REAL, MFCC4  REAL, MFCC5  REAL,
+        MFCC6          REAL, MFCC7  REAL, MFCC8  REAL,
+        MFCC9          REAL, MFCC10 REAL, MFCC11 REAL,
+        MFCC12         REAL,
+        DELTA0         REAL, DELTA1 REAL, DELTA2 REAL,
+        DELTA3         REAL, DELTA4 REAL, DELTA5 REAL,
+        DELTA6         REAL, DELTA7 REAL, DELTA8 REAL,
+        DELTA9         REAL, DELTA10 REAL, DELTA11 REAL,
+        DELTA12        REAL
+        DELTA_DELTA0    REAL, DELTA_DELTA1 REAL, DELTA_DELTA2 REAL,
+        DELTA_DELTA3    REAL, DELTA_DELTA4 REAL, DELTA_DELTA5 REAL,
+        DELTA_DELTA6    REAL, DELTA_DELTA7 REAL, DELTA_DELTA8 REAL,
+        DELTA_DELTA9    REAL, DELTA_DELTA10 REAL, DELTA_DELTA11 REAL,
+        DELTA_DELTA12   REAL
         );
         """)
         conn.commit()
