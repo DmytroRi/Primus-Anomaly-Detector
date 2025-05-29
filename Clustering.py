@@ -102,23 +102,38 @@ def output_detailed_report(y_best, y_test, le, names_test, genres_test):
 def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
     """Plots a confusion matrix."""
 
-    fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest')
-    ax.figure.colorbar(im, ax=ax)
+    cm = np.array(cm)
+    total = cm.sum()
+    cm_percent = cm.astype('float') / total * 100
 
+    fig, ax = plt.subplots(figsize=(8, 8))
+    im = ax.imshow(cm_percent, interpolation='nearest', cmap=cmap)
+    cbar = ax.figure.colorbar(im, ax=ax)
+    cbar.set_label('Percentage of total (%)')
+
+    # Set up axes
     ax.set(
-        xticks=range(len(classes)),
-        yticks=range(len(classes)),
+        xticks=np.arange(len(classes)),
+        yticks=np.arange(len(classes)),
         xticklabels=classes,
         yticklabels=classes,
         ylabel='True label',
         xlabel='Predicted label',
-        title='Confusion Matrix'
+        title=title
     )
-
-    # Rotate tick labels for readability
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-    
+
+    # Annotate each cell with count and percent
+    thresh = cm_percent.max() / 2.0
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            count = cm[i, j]
+            pct = cm_percent[i, j]
+            label = f"{count}\n{pct:.1f}%"
+            ax.text(j, i, label,
+                    ha="center", va="center",
+                    color="white" if pct > thresh else "black")
+
     plt.tight_layout()
     plt.show()
 
