@@ -103,13 +103,13 @@ def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
     """Plots a confusion matrix."""
 
     cm = np.array(cm)
-    total = cm.sum()
-    cm_percent = cm.astype('float') / total * 100
+    row_sums = cm.sum(axis=1, keepdims=True)
+    cm_percent = np.divide(cm, row_sums, where=row_sums!=0) * 100
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    im = ax.imshow(cm_percent, interpolation='nearest', cmap=cmap)
+    im = ax.imshow(cm_percent, interpolation='nearest', cmap=plt.cm.Blues)
     cbar = ax.figure.colorbar(im, ax=ax)
-    cbar.set_label('Percentage of total (%)')
+    cbar.set_label('Percentage of true class (%)')
 
     # Set up axes
     ax.set(
@@ -124,15 +124,15 @@ def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
     # Annotate each cell with count and percent
-    thresh = cm_percent.max() / 2.0
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
-            count = cm[i, j]
             pct = cm_percent[i, j]
-            label = f"{count}\n{pct:.1f}%"
+            label = f"{pct:.2f}%"
+            # Use a threshold based on the max percentage in the row for text color contrast
+            text_color = "white" if pct > (cm_percent[i].max() / 2) else "black"
             ax.text(j, i, label,
                     ha="center", va="center",
-                    color="white" if pct > thresh else "black")
+                    color=text_color)
 
     plt.tight_layout()
     plt.show()
