@@ -61,6 +61,66 @@ def insert_in_DB(
     finally:
         conn.close()
 
+def insert_extended_in_DB(
+    records: Sequence[Tuple[str, str, int, List[float]]]
+):
+    """
+    Inserts multiple MFCC frames into WORKING_TABLE_EXTERN_EXT in one batch.
+
+    Args:
+      records: an iterable of tuples
+        (song_name, song_genre, classification, mfcc_values)
+        where mfcc_values is a list of exactly 13 floats
+    """
+    # Build the parameter tuples
+    params = []
+    for song_name, song_genre, classification, features_values in records:
+        if len(features_values) != 39:
+            raise ValueError("Each features_values must have 39 floats.")
+        # flatten into one tuple of length 42
+        params.append((song_name, song_genre, classification, *features_values))
+
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        # turn off autocommit so all INSERTs live in a single transaction
+        cur.execute("BEGIN")
+        cur.executemany(f"""
+            INSERT INTO {WORKING_TABLE_EXTERN_EXT} (
+                SONG_NAME,
+                SONG_GENRE,
+                CLASSIFICATION,
+                MFCC0, MFCC1, MFCC2, MFCC3, MFCC4,
+                MFCC5, MFCC6, MFCC7, MFCC8,
+                MFCC9, MFCC10, MFCC11, MFCC12,
+                DELTA0, DELTA1, DELTA2, DELTA3, DELTA4,
+                DELTA5, DELTA6, DELTA7, DELTA8,
+                DELTA9, DELTA10, DELTA11, DELTA12,
+                DELTA_DELTA0, DELTA_DELTA1, DELTA_DELTA2,
+                DELTA_DELTA3, DELTA_DELTA4, DELTA_DELTA5,
+                DELTA_DELTA6, DELTA_DELTA7, DELTA_DELTA8,
+                DELTA_DELTA9, DELTA_DELTA10, DELTA_DELTA11,
+                DELTA_DELTA12
+            ) VALUES (
+                ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?
+            );
+        """, params)
+        conn.commit()
+        print(f"Inserted {len(params)} rows in one transaction")
+    except sqlite3.Error as e:
+        conn.rollback()
+        print(f"SQLite error during bulk insert: {e}")
+    finally:
+        conn.close()
 
 def reset_DB():
     """
@@ -130,7 +190,7 @@ def create_table_features_extended_deltas():
         DELTA3         REAL, DELTA4 REAL, DELTA5 REAL,
         DELTA6         REAL, DELTA7 REAL, DELTA8 REAL,
         DELTA9         REAL, DELTA10 REAL, DELTA11 REAL,
-        DELTA12        REAL
+        DELTA12        REAL,
         DELTA_DELTA0    REAL, DELTA_DELTA1 REAL, DELTA_DELTA2 REAL,
         DELTA_DELTA3    REAL, DELTA_DELTA4 REAL, DELTA_DELTA5 REAL,
         DELTA_DELTA6    REAL, DELTA_DELTA7 REAL, DELTA_DELTA8 REAL,
