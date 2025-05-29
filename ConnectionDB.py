@@ -297,7 +297,7 @@ def compute_and_save_zscored_mfcc(
     finally:
         conn.close()
 
-def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, float, float, float, float, float, float, float, float]]:
+def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, float, float, float, float, float, float, float, float, float, float]]:
     """
     Uploads data from the specified table in the database.
     """
@@ -315,6 +315,37 @@ def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, floa
     rows = cur.fetchall()
     conn.close()
     print(f"Uploaded {len(rows)} rows from {WORKING_TABLE0}.")
+    return rows
+
+
+def upload_data_from_ext_db() -> List[Tuple[str, str, int, float, float, float, float, float, float, float, float, float, float, float, float, float,
+                                                           float, float, float, float, float, float, float, float, float, float, float, float, float,
+                                                           float, float, float, float, float, float, float, float, float, float, float, float, float]]:    
+    """
+    Uploads data from the specified table in the database.
+    """
+    print(f"Uploading data from table {WORKING_TABLE_EXTERN_EXT}...")
+    conn = sqlite3.connect(DB_PATH)
+    cur  = conn.cursor()
+    cur.execute(f"""
+                SELECT 
+                "SONG_NAME", "SONG_GENRE", "CLASSIFICATION",
+                "MFCC0",    "MFCC1",    "MFCC2",    "MFCC3",    "MFCC4",
+                "MFCC5",    "MFCC6",    "MFCC7",    "MFCC8",
+                "MFCC9",    "MFCC10",   "MFCC11",   "MFCC12",
+                "DELTA0",   "DELTA1",   "DELTA2",   "DELTA3",   "DELTA4",
+                "DELTA5",   "DELTA6",   "DELTA7",   "DELTA8",
+                "DELTA9",   "DELTA10",  "DELTA11",  "DELTA12",
+                "DELTA_DELTA0", "DELTA_DELTA1", "DELTA_DELTA2",
+                "DELTA_DELTA3", "DELTA_DELTA4", "DELTA_DELTA5",
+                "DELTA_DELTA6", "DELTA_DELTA7", "DELTA_DELTA8",
+                "DELTA_DELTA9", "DELTA_DELTA10", "DELTA_DELTA11",
+                "DELTA_DELTA12"
+                FROM {WORKING_TABLE_EXTERN_EXT};
+                """)
+    rows = cur.fetchall()
+    conn.close()
+    print(f"Uploaded {len(rows)} rows from {WORKING_TABLE_EXTERN_EXT}.")
     return rows
 
 def check_table_empty(table_name: str):
