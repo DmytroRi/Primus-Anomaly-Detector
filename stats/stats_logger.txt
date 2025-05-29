@@ -1,0 +1,61 @@
+-------------------------------------------------------------------------------------
+Description: 		Precision on the whole dataset using only the first 13th MFCC
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				47
+Best Presicion: 	48.57%
+Recall:				--
+F1-score:			--
+Confusion Matrix:	--
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the dataset without Primus using only the first 13th MFCC
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				51
+Best Presicion: 	50.29%
+Recall:				50%
+F1-score:			0.50
+Confusion Matrix:
+					 precision    recall  f1-score   support
+
+  alternative_metal       0.41      0.32      0.36    344077
+        black_metal       0.54      0.70      0.61    455874
+classic_heavy_metal       0.46      0.53      0.49    398556
+        death_metal       0.55      0.54      0.54    345131
+          hard_rock       0.51      0.52      0.52    345601
+           nu_metal       0.46      0.35      0.40    297358
+       thrash_metal       0.53      0.49      0.51    357040
+
+           accuracy                           0.50   2543637
+          macro avg       0.50      0.49      0.49   2543637
+       weighted avg       0.50      0.50      0.50   2543637
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the external dataset using only the first 13th MFCC
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				12
+Best Presicion: 	63.15%
+Recall:				63%
+F1-score:			0.62
+Confusion Matrix:
+              precision    recall  f1-score   support
+
+       blues       0.70      0.67      0.68     60180
+   classical       0.81      0.89      0.85     60208
+     country       0.60      0.59      0.59     60200
+       disco       0.49      0.41      0.45     60184
+      hiphop       0.63      0.46      0.53     60328
+        jazz       0.65      0.76      0.70     60218
+       metal       0.61      0.80      0.69     60153
+         pop       0.63      0.75      0.69     60140
+      reggae       0.68      0.51      0.59     60156
+        rock       0.49      0.46      0.48     60199
+
+    accuracy                           0.63    601966
+   macro avg       0.63      0.63      0.62    601966
+weighted avg       0.63      0.63      0.62    601966
+-------------------------------------------------------------------------------------

@@ -9,8 +9,9 @@ WORKING_TABLE = "FeaturesExtended"         # Working table name for MFCC feature
 TABLES NAMING CONVENTION:
 [FRAME_LENGTH][HOP_LENGTH]_[DELTA_TYPE]_[ADDITIONAL_INFO]
 """
-WORKING_TABLE0 = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
-WORKING_TABLE1 = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
+WORKING_TABLE_EXTERN    = "fr20h10_nodelta_extern"                   # 20ms frame, 10ms hop, no delta features, no CMVN, external dataset
+WORKING_TABLE0          = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
+WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
@@ -217,3 +218,22 @@ def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, floa
     conn.close()
     print(f"Uploaded {len(rows)} rows from {WORKING_TABLE0}.")
     return rows
+
+def check_table_empty(table_name: str):
+    """
+    Checks if the specified table is empty an resets it if needed.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM {table_name};")
+    count = cur.fetchone()[0]
+    conn.close()
+    if count != 0:
+        print(f"Table {table_name} is not empty. Do you want to reset it? (y/n)")
+        answer = input().strip().lower()
+        if answer == 'y':
+            print(f"Resetting table {table_name}...")
+            reset_DB()
+        else:
+            print("Table not reset. Exiting.")
+    pass
