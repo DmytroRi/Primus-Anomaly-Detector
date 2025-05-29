@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from collections import Counter
 from annoy import AnnoyIndex
 
-K_MAX = 20
+K_MAX = 70
 N_TREES = 20            # Number of trees for Annoy index
 METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
