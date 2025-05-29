@@ -218,3 +218,22 @@ def upload_data_from_db() -> List[Tuple[str, str, int, float, float, float, floa
     conn.close()
     print(f"Uploaded {len(rows)} rows from {WORKING_TABLE0}.")
     return rows
+
+def check_table_empty(table_name: str):
+    """
+    Checks if the specified table is empty an resets it if needed.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM {table_name};")
+    count = cur.fetchone()[0]
+    conn.close()
+    if count != 0:
+        print(f"Table {table_name} is not empty. Do you want to reset it? (y/n)")
+        answer = input().strip().lower()
+        if answer == 'y':
+            print(f"Resetting table {table_name}...")
+            reset_DB()
+        else:
+            print("Table not reset. Exiting.")
+    pass
