@@ -11,6 +11,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from collections import Counter
 from annoy import AnnoyIndex
+from collections import defaultdict
 
 K_MAX = 70
 N_TREES = 20            # Number of trees for Annoy index
@@ -18,9 +19,52 @@ METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
+def combine_frames(rows, duration_ms, hop_ms):
+    """Groups tiny frames into larger segments and computes mean+std features."""
+    frames_per_segment = int(duration_ms / hop_ms)
+    by_song = defaultdict(list)
+    genres = {}
+
+    # Group frames by song
+    for row in rows:
+        song = row[0]
+        genre = row[1]
+        mfcc = row[3:]
+        by_song[song].append(mfcc)
+        genres[song] = genre
+
+    agg_records = []
+    # Aggregate each song’s frames into segments
+    for song, feats in by_song.items():
+        arr = np.array(feats, dtype=float)  # shape (n_frames, 13)
+        n_frames = arr.shape[0]
+        n_segments = int(np.ceil(n_frames / frames_per_segment))
+
+        for i in range(n_segments):
+            start_frame = i * frames_per_segment
+            end_frame = min((i + 1) * frames_per_segment, n_frames)
+            segment = arr[start_frame:end_frame]
+            if segment.size == 0:
+                continue
+
+            mean = segment.mean(axis=0)
+            std = segment.std(axis=0)
+            agg_feats = np.hstack([mean, std])  # shape (26,)
+
+            # Compute time period labels
+            start_ms = start_frame * hop_ms
+            end_ms = end_frame * hop_ms
+            time_period = f"{start_ms}-{end_ms}ms"
+
+            agg_records.append((agg_feats, genres[song], time_period))
+
+    return agg_records
+
 def visualize_embedding(rows, method='pca'):
     """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
     
+    rows = combine_frames(rows, duration_ms=15000, hop_ms=15000)
+
     features = np.array([r[3:] for r in rows], dtype=np.float32)
     genres   = [r[1] for r in rows]
     le       = LabelEncoder().fit(genres)
