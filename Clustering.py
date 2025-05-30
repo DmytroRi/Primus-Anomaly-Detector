@@ -21,54 +21,38 @@ NEIGHBOURS = 5
 
 def combine_frames(rows, duration_ms, hop_ms):
     """Groups tiny frames into larger segments and computes mean+std features."""
-    frames_per_segment = int(duration_ms / hop_ms)
+    frames_per_seg = duration_ms // hop_ms
     by_song = defaultdict(list)
-    genres = {}
-
-    # Group frames by song
+    genres_map = {}
     for row in rows:
-        song = row[0]
-        genre = row[1]
+        song, genre = row[0], row[1]
         mfcc = row[3:]
         by_song[song].append(mfcc)
-        genres[song] = genre
-
-    agg_records = []
-    # Aggregate each song’s frames into segments
+        genres_map[song] = genre
+    feats_list, genre_list = [], []
     for song, feats in by_song.items():
-        arr = np.array(feats, dtype=float)  # shape (n_frames, 13)
+        arr = np.array(feats, dtype=float)
         n_frames = arr.shape[0]
-        n_segments = int(np.ceil(n_frames / frames_per_segment))
+        n_segs = int(np.ceil(n_frames / frames_per_seg))
+        for i in range(n_segs):
+            seg = arr[i*frames_per_seg:(i+1)*frames_per_seg]
+            if seg.size == 0: continue
+            mean = seg.mean(axis=0)
+            std  = seg.std(axis=0)
+            feats_list.append(np.hstack([mean, std]))
+            genre_list.append(genres_map[song])
+    features = np.vstack(feats_list)
+    genres  = genre_list
 
-        for i in range(n_segments):
-            start_frame = i * frames_per_segment
-            end_frame = min((i + 1) * frames_per_segment, n_frames)
-            segment = arr[start_frame:end_frame]
-            if segment.size == 0:
-                continue
-
-            mean = segment.mean(axis=0)
-            std = segment.std(axis=0)
-            agg_feats = np.hstack([mean, std])  # shape (26,)
-
-            # Compute time period labels
-            start_ms = start_frame * hop_ms
-            end_ms = end_frame * hop_ms
-            time_period = f"{start_ms}-{end_ms}ms"
-
-            agg_records.append((agg_feats, genres[song], time_period))
-
-    return agg_records
+    return features, genres
 
 def visualize_embedding(rows, method='pca'):
     """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
     
-    rows = combine_frames(rows, duration_ms=15000, hop_ms=15000)
+    features, genres = combine_frames(rows, duration_ms=30000, hop_ms=30000)
 
-    features = np.array([r[3:] for r in rows], dtype=np.float32)
-    genres   = [r[1] for r in rows]
-    le       = LabelEncoder().fit(genres)
-    y        = le.transform(genres)
+    le = LabelEncoder().fit(genres)
+    y  = le.transform(genres)
 
     if method == 'pca':
         emb = PCA(n_components=2).fit_transform(features)
@@ -79,10 +63,11 @@ def visualize_embedding(rows, method='pca'):
 
     pfig, ax = plt.subplots(figsize=(8, 6))
     scatter = ax.scatter(emb[:, 0], emb[:, 1], c=y, cmap='tab10', s=20, alpha=0.7)
-    handles, labels = scatter.legend_elements()
+    handles, _ = scatter.legend_elements()
+    genre_labels = list(le.classes_)
     ax.legend(
-        handles=handles,
-        labels=labels,
+        handles=list(handles),
+        labels=genre_labels,
         title="Genre",
         bbox_to_anchor=(1, 1),
         loc="upper left"
