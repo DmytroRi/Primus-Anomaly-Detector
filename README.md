@@ -22,6 +22,63 @@ The classification of music genres is subjective! There are no strict rules that
 For research purposes, I will use classifications from Wikipedia as well as my own experience as a music enthusiast. Over the past six years, I’ve recorded details of more than 300 albums in my personal Excel table — and I’m still adding to it. 
 
 ### Progress
+#### 03.05.2025
 The Purity value by segmentation strategy and methods as of 03.05.2025:
 
-![Plot](/stats/20250503.png)
+![Plot](/stats/20250503.png)    
+
+#### 08.05.2025
+I considered applying the k-nearest neighbors (KNN) algorithm, as the initial data is already labeled. In contrast, k-means performs better on unlabeled data because it can discover clusters or outliers.
+
+#### 20.05.2025
+Due to the complexity of implementing algorithms in C++, it would be more efficient to continue the work using Python and use existing solutions from different libraries. Additionally, given the large dataset because of the new framing strategy, the data should be stored in a local SQLite database for easier access and management.   
+
+#### 26.05.2025
+Precision by Number of Neighbors (k) as of 26.05.2025:   
+![Plot](/stats/20250526.png)   
+The highest precision value is 48.57%. The next steps are:
+  - Compute the recall value
+  - Compute the confusion matrix
+  - Validate the algorithm with a more distinct dataset
+
+#### 27.05.2025
+The Confusion Matrix as for 27.05.2025:
+![Plot](/stats/20250527cm.png)   
+>Detailed classification report:
+>
+>                            precision    recall  f1-score   support   
+>        alternative_metal       0.38      0.30      0.33    344077    
+>              black_metal       0.52      0.69      0.59    455874    
+>      classic_heavy_metal       0.43      0.50      0.46    398556    
+>              death_metal       0.53      0.53      0.53    345131   
+>                hard_rock       0.47      0.47      0.47    345601   
+>                 nu_metal       0.43      0.33      0.37    297358      
+>                   primus       0.62      0.51      0.56    319524   
+>             thrash_metal       0.50      0.47      0.49    357040   
+>   
+>                 accuracy                           0.49   2863161   
+>                macro avg       0.48      0.47      0.48   2863161   
+>             weighted avg       0.48      0.49      0.48   2863161
+>       
+
+#### 28.05.2025
+The Confusion Matrix as for 28.05.2025:
+![Plot](/stats/20250528cm.png)   
+>Detailed classification report:
+>
+>                           precision    recall  f1-score   support
+>       alternative_metal       0.38      0.30      0.33    344077
+>             black_metal       0.52      0.69      0.59    455874
+>     classic_heavy_metal       0.43      0.50      0.46    398556
+>             death_metal       0.53      0.53      0.53    345131
+>               hard_rock       0.47      0.47      0.47    345601
+>                nu_metal       0.43      0.33      0.37    297358
+>                  primus       0.62      0.51      0.56    319524
+>            thrash_metal       0.50      0.47      0.49    357040
+>
+>               accuracy                            0.49   2863161
+>              macro avg        0.48      0.47      0.48   2863161
+>           weighted avg        0.48      0.49      0.48   2863161
+>
+
+The next step would be to improve the nu-metal and alternative-metal algorithms, as well as to adjust the duration of each subset.

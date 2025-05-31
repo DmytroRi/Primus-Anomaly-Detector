@@ -2,23 +2,88 @@
 import time
 import numpy as np
 import ConnectionDB as DB
+import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from collections import Counter
 from annoy import AnnoyIndex
+from collections import defaultdict
 
-K_MAX = 20
+K_MAX = 70
 N_TREES = 20            # Number of trees for Annoy index
 METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
+def combine_frames(rows, duration_ms, hop_ms):
+    """Groups tiny frames into larger segments and computes mean+std features."""
+    frames_per_seg = duration_ms // hop_ms
+    by_song = defaultdict(list)
+    genres_map = {}
+    for row in rows:
+        song, genre = row[0], row[1]
+        mfcc = row[3:]
+        by_song[song].append(mfcc)
+        genres_map[song] = genre
+    feats_list, genre_list = [], []
+    for song, feats in by_song.items():
+        arr = np.array(feats, dtype=float)
+        n_frames = arr.shape[0]
+        n_segs = int(np.ceil(n_frames / frames_per_seg))
+        for i in range(n_segs):
+            seg = arr[i*frames_per_seg:(i+1)*frames_per_seg]
+            if seg.size == 0: continue
+            mean = seg.mean(axis=0)
+            std  = seg.std(axis=0)
+            feats_list.append(np.hstack([mean, std]))
+            genre_list.append(genres_map[song])
+    features = np.vstack(feats_list)
+    genres  = genre_list
+
+    return features, genres
+
+def visualize_embedding(rows, method='pca'):
+    """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
+    
+    features, genres = combine_frames(rows, duration_ms=30000, hop_ms=30000)
+
+    le = LabelEncoder().fit(genres)
+    y  = le.transform(genres)
+
+    if method == 'pca':
+        emb = PCA(n_components=2).fit_transform(features)
+    elif method == 'tsne':
+        emb = TSNE(n_components=2, perplexity=30, n_iter=1000).fit_transform(features)
+    else:
+        raise ValueError("method must be 'pca' or 'tsne'")
+
+    pfig, ax = plt.subplots(figsize=(8, 6))
+    scatter = ax.scatter(emb[:, 0], emb[:, 1], c=y, cmap='tab10', s=20, alpha=0.7)
+    handles, _ = scatter.legend_elements()
+    genre_labels = list(le.classes_)
+    ax.legend(
+        handles=list(handles),
+        labels=genre_labels,
+        title="Genre",
+        bbox_to_anchor=(1, 1),
+        loc="upper left"
+    )
+    plt.title(f"{method.upper()} projection of MFCC features")
+    plt.xlabel("Dim 1")
+    plt.ylabel("Dim 2")
+    plt.tight_layout()
+    plt.show()
+
 def split_data():
     """Loads rows from DB, extracts features & labels, splits, and scales."""
     rows = DB.upload_data_from_db()
     # rows: (song_name, song_genre, dummy_class, mfcc0…mfcc12)
+
+    visualize_embedding(rows)
 
     raw_genres = [r[1] for r in rows]
     features   = np.array([r[3:] for r in rows], dtype=np.float32)
@@ -88,13 +153,53 @@ def output_detailed_report(y_best, y_test, le, names_test, genres_test):
     print("Classification Report:")
     print(classification_report(y_test, y_best, target_names=le.classes_))
     print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_best))
+    cm = confusion_matrix(y_test, y_best)
+    print(cm)
+    plot_confusion_matrix(cm, classes=le.classes_)
 
     # show first misclassified example
     for name, true_lab, pred_lab in zip(names_test, y_test, y_best):
         if true_lab != pred_lab:
             print(f"First misclassified: {name} -> true={le.classes_[true_lab]}, pred={le.classes_[pred_lab]}")
             break
+
+def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
+    """Plots a confusion matrix."""
+
+    cm = np.array(cm)
+    row_sums = cm.sum(axis=1, keepdims=True)
+    cm_percent = np.divide(cm, row_sums, where=row_sums!=0) * 100
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    im = ax.imshow(cm_percent, interpolation='nearest', cmap=plt.cm.Blues)
+    cbar = ax.figure.colorbar(im, ax=ax)
+    cbar.set_label('Percentage of true class (%)')
+
+    # Set up axes
+    ax.set(
+        xticks=np.arange(len(classes)),
+        yticks=np.arange(len(classes)),
+        xticklabels=classes,
+        yticklabels=classes,
+        ylabel='True label',
+        xlabel='Predicted label',
+        title=title
+    )
+    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+
+    # Annotate each cell with count and percent
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            pct = cm_percent[i, j]
+            label = f"{pct:.2f}%"
+            # Use a threshold based on the max percentage in the row for text color contrast
+            text_color = "white" if pct > (cm_percent[i].max() / 2) else "black"
+            ax.text(j, i, label,
+                    ha="center", va="center",
+                    color=text_color)
+
+    plt.tight_layout()
+    plt.show()
 
 def main():
     print("\n--- Split & Scale Data ---")
