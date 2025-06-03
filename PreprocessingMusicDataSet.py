@@ -18,6 +18,14 @@ HOP_MS       = 10
 SILENCE_THRESHOLD_DB = 40
 DUMMY_CLASSIFICATION = 8
 
+def print_genre_info(genre, length_seconds, length_frames, num_files):
+    """Prints information about the genre."""
+    print(f"Genre: {genre}")
+    print(f"  Length (seconds): {length_seconds:.2f}")
+    print(f"  Length (frames): {length_frames}")
+    print(f"  Number of files: {num_files}")
+    print("-" * 40)
+    
 def trim_silence_edges(signal):
 
     intervals = librosa.effects.split(y=signal, top_db=SILENCE_THRESHOLD_DB)
