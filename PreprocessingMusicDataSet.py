@@ -22,9 +22,9 @@ DUMMY_CLASSIFICATION = 8
 def print_genre_info(genre, length_seconds, length_frames, num_files):
     """Prints information about the genre."""
     print(f"Genre: {genre}")
-    print(f"  Length (seconds): {length_seconds:.2f}")
-    print(f"  Length (frames): {length_frames}")
-    print(f"  Number of files: {num_files}")
+    print(f"  Length (h:mm:ss):\t {str(datetime.timedelta(seconds=float(f'{length_seconds:.2f}')))}")
+    print(f"  Length (frames):\t {length_frames}")
+    print(f"  Number of files:\t {num_files}")
     print("-" * 40)
     
 def trim_silence_edges(signal):
