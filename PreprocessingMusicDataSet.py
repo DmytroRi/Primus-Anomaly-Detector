@@ -10,6 +10,7 @@ import ConnectionDB as DB
 DATASET_PATH = "E:\\dataset"
 JSON_PATH    = "computed_data/features_13mfcc_20frame_10hop_delta_deltadelta_nocmvn.json"
 USE_DB       = True
+EXCEPTIONS_PATH = "data_set/Exceptions.txt"  # Path to the exceptions file
 
 # Constants
 SAMPLE_RATE  = 22050 
@@ -18,6 +19,14 @@ FRAME_MS     = 20
 HOP_MS       = 10
 SILENCE_THRESHOLD_DB = 40
 DUMMY_CLASSIFICATION = 8
+
+def read_exceptions():
+    """Reads exceptions files"""
+    print("Reading exceptions from file...")
+    with open(EXCEPTIONS_PATH, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip() for line in lines]
+    return lines
 
 def print_genre_info(genre, length_seconds, length_frames, num_files):
     """Prints information about the genre."""
@@ -93,6 +102,7 @@ def extract_mfcc(
 def save_features(dataset_path, json_path):
     print("Execution of save_mfcc function has started.")
 
+    exceptions = read_exceptions()
     data = {}
 
      # precompute sample counts
@@ -110,8 +120,9 @@ def save_features(dataset_path, json_path):
         lenght_seconds = 0
         length_frames = 0
 
+        filtered_filenames = [fname for fname in filenames if fname not in exceptions]
         # Process all files (songs) in the folder
-        for fname in filenames:
+        for fname in filtered_filenames:
             file_path = os.path.join(dirpath, fname)
             signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
