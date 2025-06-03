@@ -20,3 +20,6 @@ computed_data/*
 
 # Ignore database files
 clustering/Database/features.db
+
+# Ignore adjusting file
+data_set/Exceptions.txt
