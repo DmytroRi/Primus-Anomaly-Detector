@@ -3,12 +3,14 @@ import os
 import librosa
 import json
 import numpy as np
+import datetime
 import ConnectionDB as DB
 
 
 DATASET_PATH = "E:\\dataset"
 JSON_PATH    = "computed_data/features_13mfcc_20frame_10hop_delta_deltadelta_nocmvn.json"
 USE_DB       = True
+EXCEPTIONS_PATH = "data_set/Exceptions.txt"  # Path to the exceptions file
 
 # Constants
 SAMPLE_RATE  = 22050 
@@ -18,6 +20,22 @@ HOP_MS       = 10
 SILENCE_THRESHOLD_DB = 40
 DUMMY_CLASSIFICATION = 8
 
+def read_exceptions():
+    """Reads exceptions files"""
+    print("Reading exceptions from file...")
+    with open(EXCEPTIONS_PATH, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip() for line in lines]
+    return lines
+
+def print_genre_info(genre, length_seconds, length_frames, num_files):
+    """Prints information about the genre."""
+    print(f"Genre: {genre}")
+    print(f"  Length (h:mm:ss):\t {str(datetime.timedelta(seconds=float(f'{length_seconds:.2f}')))}")
+    print(f"  Length (frames):\t {length_frames}")
+    print(f"  Number of files:\t {num_files}")
+    print("-" * 40)
+    
 def trim_silence_edges(signal):
 
     intervals = librosa.effects.split(y=signal, top_db=SILENCE_THRESHOLD_DB)
@@ -26,7 +44,7 @@ def trim_silence_edges(signal):
         start_sample = intervals[0, 0]  # start of the first segment
         end_sample   = intervals[-1, 1] # end of the last segment
         signal_trimmed = signal[start_sample:end_sample]
-        print(f"Trimmed {start_sample/SAMPLE_RATE:.2f}s of silence/intros and {len(signal)-end_sample/SAMPLE_RATE:.2f}s of silence/outros.")
+        #print(f"Trimmed {start_sample/SAMPLE_RATE:.2f}s of silence/intros and {len(signal)-end_sample/SAMPLE_RATE:.2f}s of silence/outros.")
     else:
         signal_trimmed = signal
 
@@ -81,9 +99,10 @@ def extract_mfcc(
 
     return mfcc  
 
-def save_mfcc(dataset_path, json_path):
+def save_features(dataset_path, json_path):
     print("Execution of save_mfcc function has started.")
 
+    exceptions = read_exceptions()
     data = {}
 
      # precompute sample counts
@@ -95,18 +114,26 @@ def save_mfcc(dataset_path, json_path):
             continue
         
         genre = os.path.basename(dirpath)
+        if genre == "nu_metal" or genre == "alternative_metal":
+            continue
         data.setdefault(genre, {})
         print(f"Processing {genre}\n")
-         
-         
+
+        lenght_seconds = 0
+        length_frames = 0
+
+        filtered_filenames = [fname for fname in filenames if fname not in exceptions]
         # Process all files (songs) in the folder
-        for fname in filenames:
+        for fname in filtered_filenames:
             file_path = os.path.join(dirpath, fname)
             signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
-            print(f"Processing {fname}...")
+            #print(f"Processing {fname}...")
             # Trim silence from the beginning of the audio signal
             signal = trim_silence_edges(signal)
+
+            lenght_seconds += librosa.get_duration(y=signal, sr=sr)
+            length_frames += math.ceil(len(signal) / hop_length)
 
             # Check if the signal is empty after trimming
             if signal.size == 0:
@@ -143,7 +170,8 @@ def save_mfcc(dataset_path, json_path):
             else:
                 data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
-
+            
+        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
     if not USE_DB:
         # Write the restructured data into the JSON file
         print(f"Writing data to {json_path}...\n")
@@ -158,4 +186,4 @@ def save_mfcc(dataset_path, json_path):
     # print("-------------------------------------------")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH)
+    save_features(DATASET_PATH, JSON_PATH)
