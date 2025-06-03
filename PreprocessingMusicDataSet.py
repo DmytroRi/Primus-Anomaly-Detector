@@ -114,6 +114,8 @@ def save_features(dataset_path, json_path):
             continue
         
         genre = os.path.basename(dirpath)
+        if genre == "nu_metal" or genre == "alternative_metal":
+            continue
         data.setdefault(genre, {})
         print(f"Processing {genre}\n")
 
