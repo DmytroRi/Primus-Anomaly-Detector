@@ -3,6 +3,7 @@ import os
 import librosa
 import json
 import numpy as np
+import datetime
 import ConnectionDB as DB
 
 
@@ -34,7 +35,7 @@ def trim_silence_edges(signal):
         start_sample = intervals[0, 0]  # start of the first segment
         end_sample   = intervals[-1, 1] # end of the last segment
         signal_trimmed = signal[start_sample:end_sample]
-        print(f"Trimmed {start_sample/SAMPLE_RATE:.2f}s of silence/intros and {len(signal)-end_sample/SAMPLE_RATE:.2f}s of silence/outros.")
+        #print(f"Trimmed {start_sample/SAMPLE_RATE:.2f}s of silence/intros and {len(signal)-end_sample/SAMPLE_RATE:.2f}s of silence/outros.")
     else:
         signal_trimmed = signal
 
@@ -105,16 +106,21 @@ def save_features(dataset_path, json_path):
         genre = os.path.basename(dirpath)
         data.setdefault(genre, {})
         print(f"Processing {genre}\n")
-         
-         
+
+        lenght_seconds = 0
+        length_frames = 0
+
         # Process all files (songs) in the folder
         for fname in filenames:
             file_path = os.path.join(dirpath, fname)
             signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             
-            print(f"Processing {fname}...")
+            #print(f"Processing {fname}...")
             # Trim silence from the beginning of the audio signal
             signal = trim_silence_edges(signal)
+
+            lenght_seconds += librosa.get_duration(y=signal, sr=sr)
+            length_frames += math.ceil(len(signal) / hop_length)
 
             # Check if the signal is empty after trimming
             if signal.size == 0:
@@ -151,7 +157,8 @@ def save_features(dataset_path, json_path):
             else:
                 data[genre][fname] = {"frames": mfcc_frames.tolist()}
             print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
-
+            
+        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
     if not USE_DB:
         # Write the restructured data into the JSON file
         print(f"Writing data to {json_path}...\n")
