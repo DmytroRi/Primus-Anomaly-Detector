@@ -89,7 +89,7 @@ def extract_mfcc(
 
     return mfcc  
 
-def save_mfcc(dataset_path, json_path):
+def save_features(dataset_path, json_path):
     print("Execution of save_mfcc function has started.")
 
     data = {}
@@ -166,4 +166,4 @@ def save_mfcc(dataset_path, json_path):
     # print("-------------------------------------------")
 
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH)
+    save_features(DATASET_PATH, JSON_PATH)
