@@ -19,6 +19,8 @@ METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
+BINARY_CLASSIFICATION = True  # If True, use binary classification (primus or not primus) instead of multi-genre classification
+
 def combine_frames(rows, duration_ms, hop_ms):
     """Groups tiny frames into larger segments and computes mean+std features."""
     frames_per_seg = duration_ms // hop_ms
@@ -83,7 +85,11 @@ def split_data():
     rows = DB.upload_data_from_db()
     # rows: (song_name, song_genre, dummy_class, mfcc0…mfcc12)
 
-    visualize_embedding(rows)
+    if BINARY_CLASSIFICATION:
+        # Convert to binary classification: Primus vs. Non-Primus
+        rows = [(r[0], 'primus' if r[1] == 'primus' else 'non-primus', r[2], *r[3:]) for r in rows]
+
+    #visualize_embedding(rows)
 
     raw_genres = [r[1] for r in rows]
     features   = np.array([r[3:] for r in rows], dtype=np.float32)
