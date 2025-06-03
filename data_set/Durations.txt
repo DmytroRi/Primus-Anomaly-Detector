@@ -5,21 +5,15 @@ Genre: primus
 ----------------------------------------
 
 Genre: classic_heavy_metal
-  Length (hh::mm::ss):   5:31:22.290000
-  Length (frames):       19882.292244897963
+  Length (h:mm:ss):      4:24:47.720000
+  Length (frames):       15887.71700680272
   Number of files:       63
 ----------------------------------------
 
 Genre: thrash_metal
-  Length (hh::mm::ss):   4:56:51.170000
-  Length (frames):       17811.173424036275
+  Length (h:mm:ss):      4:25:38.400000
+  Length (frames):       15938.404263038545
   Number of files:       59
-----------------------------------------
-
-Genre: alternative_metal
-  Length (hh::mm::ss):   4:46:04.490000
-  Length (frames):       17164.48979591837
-  Number of files:       72
 ----------------------------------------
 
 Genre: death_metal
@@ -34,14 +28,14 @@ Genre: black_metal
   Number of files:       62
 ----------------------------------------
 
-Genre: nu_metal
-  Length (hh::mm::ss):   4:07:13.910000
-  Length (frames):       14833.90984126984
-  Number of files:       65
-----------------------------------------
-
 Genre: hard_rock
   Length (hh::mm::ss):   4:47:20.550000
   Length (frames):       17240.546575963715
   Number of files:       60
+----------------------------------------
+
+Genre: alt_metal
+  Length (h:mm:ss):      4:25:28.550000
+  Length (frames):       15928.55074829932
+  Number of files:       68
 ----------------------------------------
