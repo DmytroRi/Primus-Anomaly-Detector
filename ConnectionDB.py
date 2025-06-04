@@ -433,8 +433,8 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
     ]
 
     for i in range(20):
-        columns.append(f"MFCC{i}_mean REAL")
-        columns.append(f"MFCC{i}_var  REAL")
+        columns.append(f"MFCC{i}_mean")
+        columns.append(f"MFCC{i}_var")
 
     extras = [
         "SPECTRAL_CENTROID",
@@ -457,7 +457,7 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
     try:
         cur = conn.cursor()
         cur.execute("BEGIN")
-        cur.executemany(columns, params)
+        cur.executemany(sql, params)
         conn.commit()
         print(f"Inserted {len(params)} rows in one transaction")
     except sqlite3.Error as e:

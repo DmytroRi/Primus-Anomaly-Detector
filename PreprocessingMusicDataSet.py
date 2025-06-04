@@ -98,7 +98,7 @@ def extract_features(
 
     # 9) dynamic tempo
     oenv = librosa.onset.onset_strength(y=audio, sr=sr, hop_length=hop_smp, aggregate= np.median)
-    tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
+    tempo = librosa.feature.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
 
     features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
 
