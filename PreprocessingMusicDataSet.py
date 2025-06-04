@@ -13,10 +13,10 @@ USE_DB       = True
 EXCEPTIONS_PATH = "data_set/Exceptions.txt"  # Path to the exceptions file
 
 # Constants
-SAMPLE_RATE  = 22050 
+SAMPLE_RATE  = 15000 
 N_MFCC       = 13
-FRAME_MS     = 20
-HOP_MS       = 10
+FRAME_SMP    = 4096
+HOP_SMP      = 1024
 SILENCE_THRESHOLD_DB = 40
 DUMMY_CLASSIFICATION = 8
 
@@ -53,22 +53,18 @@ def trim_silence_edges(signal):
 def extract_mfcc(
         audio, sr= 5000,
         n_mfcc=13, n_mels=40, 
-        frame_ms=20, hop_ms=10,
+        frame_smp=20, hop_smp=10,
         pre_emphasis=0.97, lifter=22,
         with_delta=True, with_delta_delta=True,
         cmvn=True):
-    
+    """Extract MFCC features from a raw audio signal, using sample based framing."""
     # 1) pre-emphasis
     audio = np.append(audio[0], audio[1:] - pre_emphasis * audio[:-1])
-
-    # 2) frame & window via n_fft & hop_length
-    n_fft      = int(sr * frame_ms/1000)
-    hop_length = int(sr * hop_ms/1000)
 
     # 3) mel spectrogram
     S = librosa.feature.melspectrogram(
         y=audio, sr=sr,
-        n_fft=n_fft, hop_length=hop_length,
+        n_fft=frame_smp, hop_length=hop_smp,
         n_mels=n_mels, window='hann'
     )
 
@@ -105,10 +101,6 @@ def save_features(dataset_path, json_path):
     exceptions = read_exceptions()
     data = {}
 
-     # precompute sample counts
-    frame_length = int(SAMPLE_RATE * FRAME_MS / 1000)
-    hop_length   = int(SAMPLE_RATE * HOP_MS   / 1000)
-
     for dirpath, _, filenames in os.walk(dataset_path):
         if dirpath == dataset_path:
             continue
@@ -133,7 +125,7 @@ def save_features(dataset_path, json_path):
             signal = trim_silence_edges(signal)
 
             lenght_seconds += librosa.get_duration(y=signal, sr=sr)
-            length_frames += math.ceil(len(signal) / hop_length)
+            length_frames += math.ceil(len(signal) / HOP_SMP)
 
             # Check if the signal is empty after trimming
             if signal.size == 0:
@@ -144,8 +136,8 @@ def save_features(dataset_path, json_path):
             mfcc_frames = extract_mfcc(audio=signal,
                                        sr=SAMPLE_RATE,
                                        n_mfcc=N_MFCC,
-                                       frame_ms=FRAME_MS,
-                                       hop_ms=HOP_MS,
+                                       frame_smp=FRAME_SMP,
+                                       hop_smp=HOP_SMP,
                                        pre_emphasis=0.97,
                                        lifter=22,
                                        with_delta=False,
