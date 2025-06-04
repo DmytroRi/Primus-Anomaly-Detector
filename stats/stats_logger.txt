@@ -95,3 +95,24 @@ Confusion Matrix:
    macro avg       0.58      0.56      0.55    601966
 weighted avg       0.58      0.56      0.55    601966
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the dataset using only the first 13th MFCC
+					(binary classificaion)
+Frame:				20ms
+Hop:				10ms
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				10
+Best Presicion: 	91,46%
+Recall:				91%
+F1-score:			0.90
+              precision    recall  f1-score   support
+
+  non-primus       0.92      0.99      0.95   2543637
+      primus       0.80      0.39      0.52    349789
+
+    accuracy                           0.91   2893426
+   macro avg       0.86      0.69      0.74   2893426
+weighted avg       0.91      0.91      0.90   2893426
+-------------------------------------------------------------------------------------
