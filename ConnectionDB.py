@@ -13,6 +13,9 @@ WORKING_TABLE_EXTERN    = "fr20h10_nodelta_extern"                   # 20ms fram
 WORKING_TABLE_EXTERN_EXT= "fr20h10_delta_deltadelta_extern"          # 20ms frame, 10ms hop, delta features, external dataset
 WORKING_TABLE0          = "fr20h10_nodelta"                          # 20ms frame, 10ms hop, no delta features, no CMVN
 WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
+###########################################################
+## Table versions 2
+FT_TABLE_F4096_H1024    = "f4096h1024"                              # 4096 samples frame, 1024 samples hop
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
@@ -366,3 +369,99 @@ def check_table_empty(table_name: str):
         else:
             print("Table not reset. Exiting.")
     pass
+
+def create_table_features_v2():
+    """
+    Creates the FeaturesExtendedV2 table in the database.
+    This table is used for storing MFCC features with additional metadata.
+    """
+    columns = [
+        "SONG_NAME",
+        "SONG_GENRE",
+        "CLASSIFICATION",
+    ]
+
+    for i in range(20):
+        columns.append(f"MFCC{i}_mean REAL")
+        columns.append(f"MFCC{i}_var  REAL")
+
+    extras = [
+        "SPECTRAL_CENTROID",
+        "SPECTRAL_BANDWIDTH",
+        "SPECTRAL_ROLLOFF",
+        "RMSE",
+        "ZCR",
+        "TEMPO"
+    ]
+    for feat in extras:
+        columns.append(f"{feat}_mean")
+        columns.append(f"{feat}_var")
+    
+    cols_sql = ",\n    ".join(columns)
+    create_sql = f"""
+    CREATE TABLE IF NOT EXISTS {FT_TABLE_F4096_H1024} (
+        {cols_sql}
+    );
+    """
+
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        cur.execute(create_sql)
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"SQLite error creating table '{FT_TABLE_F4096_H1024}': {e}")
+        conn.close()
+        return
+
+    
+
+def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
+    """Inserts multiple MFCC frames into FT_TABLE_F4096_H1024 in one batch."""
+    # Build the parameter tuples
+    params = []
+    for song_name, song_genre, classification, features in records:
+        if len(features) != 52:
+            raise ValueError("Each features size must have 13 floats.")
+        # flatten into one tuple of length 55
+        params.append((song_name, song_genre, classification, *features))
+    
+    columns = [
+        "SONG_NAME",
+        "SONG_GENRE",
+        "CLASSIFICATION",
+    ]
+
+    for i in range(20):
+        columns.append(f"MFCC{i}_mean REAL")
+        columns.append(f"MFCC{i}_var  REAL")
+
+    extras = [
+        "SPECTRAL_CENTROID",
+        "SPECTRAL_BANDWIDTH",
+        "SPECTRAL_ROLLOFF",
+        "RMSE",
+        "ZCR",
+        "TEMPO"
+    ]
+    for feat in extras:
+        columns.append(f"{feat}_mean")
+        columns.append(f"{feat}_var")
+
+    placeholders = ",".join(["?"] * len(columns))
+    columns = ",".join(columns)
+
+    sql = f"""INSERT INTO {FT_TABLE_F4096_H1024} ({columns})VALUES ({placeholders});"""
+
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.cursor()
+        cur.execute("BEGIN")
+        cur.executemany(columns, params)
+        conn.commit()
+        print(f"Inserted {len(params)} rows in one transaction")
+    except sqlite3.Error as e:
+        conn.rollback()
+        print(f"SQLite error during bulk insert: {e}")
+    finally:
+        conn.close()
