@@ -50,9 +50,9 @@ def trim_silence_edges(signal):
 
     return signal_trimmed
 
-def extract_mfcc(
+def extract_features(
         audio, sr= 5000,
-        n_mfcc=13, n_mels=40, 
+        n_mfcc=20, n_mels=40, 
         frame_smp=20, hop_smp=10,
         pre_emphasis=0.97, lifter=22,
         with_delta=True, with_delta_delta=True,
@@ -61,39 +61,41 @@ def extract_mfcc(
     # 1) pre-emphasis
     audio = np.append(audio[0], audio[1:] - pre_emphasis * audio[:-1])
 
-    # 3) mel spectrogram
+    # 2) mel spectrogram
     S = librosa.feature.melspectrogram(
         y=audio, sr=sr,
         n_fft=frame_smp, hop_length=hop_smp,
         n_mels=n_mels, window='hann'
     )
 
-    # 4) log + DCT → MFCC
+    # 3) log + DCT → MFCC
     mfcc = librosa.feature.mfcc(
         S=librosa.power_to_db(S),
         n_mfcc=n_mfcc
     )
 
-    # 5a) liftering
-    n_frames = mfcc.shape[1]
-    n = np.arange(n_mfcc)
-    lift = 1 + (lifter / 2) * np.sin(np.pi * n / lifter)
-    mfcc *= lift[:, np.newaxis]
+    # 4) spectral descriptors
+    cent = librosa.feature.spectral_centroid(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp)
 
-    # 5b) deltas
-    if with_delta:
-        d1 = librosa.feature.delta(mfcc, order=1)
-        d2 = librosa.feature.delta(mfcc, order=2)
-        mfcc = np.vstack([mfcc, d1])
-        if with_delta_delta:
-            mfcc = np.vstack([mfcc, d2])
+    # 5) spectral bandwidth
+    bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp)
 
-    # 5c) CMVN
-    if cmvn:
-        mfcc = (mfcc - mfcc.mean(axis=1, keepdims=True)) \
-               / (mfcc.std(axis=1, keepdims=True) + 1e-8)
+    # 6) spectal roll-off
+    roll = librosa.feature.spectral_rolloff(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp, roll_percent=0.85)
 
-    return mfcc  
+    # 7) root mean square energy
+    rmse = librosa.feature.rms(y=audio, frame_length=frame_smp, hop_length=hop_smp, center=True)
+
+    # 8) zero crossing rate
+    zcr = librosa.feature.zero_crossing_rate(y=audio, frame_length=frame_smp, hop_length=hop_smp, center=True)
+
+    # 9) dynamic tempo
+    oenv = librosa.onset.onset_strength(y=audio, sr=sr, hop_length=hop_smp, aggregate= np.median)
+    tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
+
+    features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
+
+    return features  
 
 def save_features(dataset_path, json_path):
     print("Execution of save_mfcc function has started.")
@@ -133,7 +135,7 @@ def save_features(dataset_path, json_path):
                 continue
 
             # Compute MFCC: shape = (n_mfcc, n_frames)
-            mfcc_frames = extract_mfcc(audio=signal,
+            mfcc_frames = extract_features(audio=signal,
                                        sr=SAMPLE_RATE,
                                        n_mfcc=N_MFCC,
                                        frame_smp=FRAME_SMP,
