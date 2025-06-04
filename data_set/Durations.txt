@@ -17,9 +17,9 @@ Genre: thrash_metal
 ----------------------------------------
 
 Genre: death_metal
-  Length (hh::mm::ss):   4:46:57.130000
-  Length (frames):       17217.129070294788
-  Number of files:       67
+  Length (h:mm:ss):      4:25:57.860000
+  Length (frames):       15957.864489795918
+  Number of files:       65
 ----------------------------------------
 
 Genre: black_metal
