@@ -125,4 +125,34 @@ def MFCC_vs_Deltas():
     plt.show()
     pass
 
-MFCC_vs_Deltas()
+def binary_classification():
+    # Data
+    k_values = list(range(1, 71))
+    precision = [0.8885, 0.8911, 0.9017, 0.9074, 0.9103, 0.9130, 0.9120, 0.9141, 0.9128, 0.9146,
+                 0.9129, 0.9144, 0.9128, 0.9141, 0.9126, 0.9137, 0.9123, 0.9134, 0.9120, 0.9130,
+                 0.9117, 0.9127, 0.9115, 0.9123, 0.9112, 0.9120, 0.9110, 0.9117, 0.9107, 0.9114,
+                 0.9104, 0.9111, 0.9102, 0.9108, 0.9099, 0.9106, 0.9097, 0.9103, 0.9095, 0.9101,
+                 0.9093, 0.9099, 0.9091, 0.9096, 0.9089, 0.9094, 0.9087, 0.9092, 0.9085, 0.9090,
+                 0.9084, 0.9088, 0.9082, 0.9087, 0.9081, 0.9085, 0.9079, 0.9083, 0.9078, 0.9081,
+                 0.9076, 0.9080, 0.9075, 0.9079, 0.9073, 0.9077, 0.9072, 0.9076, 0.9071, 0.9074]
+    
+     # Find max
+    max_prec = max(precision)
+    max_k = k_values[precision.index(max_prec)]
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_values, precision, label='Precision')
+    plt.plot(max_k, max_prec, 'ro', label=f'Max Precision: {max_prec:.4f} at k={max_k}')
+    plt.axhline(y=max_prec, color='r', linestyle='--', label='Max Precision Line')
+    plt.title('k-Nearest Neighbors Precision vs. k (Binary Classification)')
+    plt.xlabel('k (Number of Neighbors)')
+    plt.ylabel('Precision')
+    plt.xticks(k_values, rotation=45)
+    plt.legend()
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+    pass
+
+binary_classification()
