@@ -117,4 +117,5 @@ Visualization of the external dataset:
 ![Plot](/stats/20250530_datasetplot_extern.png)    
     
 As already mentioned, the biggest challenge at this stage is feature engineering. After completing the binary classification on the project dataset, the feature list should be expanded with new parameters (e.g. additional MFCCs, Zero-Crossing Rate, Band Energy Ratio, etc.).   
-I have already tried adding the first and second derivatives to the feature table of the external dataset (resulting in 39 features total), but this actually worsened the results.   
+I have already tried adding the first and second derivatives to the feature table of the external dataset (resulting in 39 features total), but this actually worsened the results:    
+![Plot](/stats/20250602__deltasperformance.png)  
