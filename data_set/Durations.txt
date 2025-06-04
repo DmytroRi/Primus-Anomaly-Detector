@@ -23,14 +23,14 @@ Genre: death_metal
 ----------------------------------------
 
 Genre: black_metal
-  Length (hh::mm::ss):   6:19:01.710000
-  Length (frames):       22741.707800453507
+  Length (h:mm:ss):      4:25:24.280000
+  Length (frames):       15924.28267573696
   Number of files:       62
 ----------------------------------------
 
 Genre: hard_rock
-  Length (hh::mm::ss):   4:47:20.550000
-  Length (frames):       17240.546575963715
+  Length (h:mm:ss):      4:24:48.500000
+  Length (frames):       15888.495056689344
   Number of files:       60
 ----------------------------------------
 
