@@ -30,11 +30,11 @@ def insert_in_DB(
     """
     # Build the parameter tuples
     params = []
-    for song_name, song_genre, classification, mfcc_values in records:
-        if len(mfcc_values) != 13:
-            raise ValueError("Each mfcc_values must have 13 floats.")
+    for song_name, song_genre, classification, features in records:
+        if len(features) != 52:
+            raise ValueError("Each mfcc_values must have 52 floats.")
         # flatten into one tuple of length 16
-        params.append((song_name, song_genre, classification, *mfcc_values))
+        params.append((song_name, song_genre, classification, *features))
 
     conn = sqlite3.connect(DB_PATH)
     try:

@@ -14,7 +14,7 @@ EXCEPTIONS_PATH = "data_set/Exceptions.txt"  # Path to the exceptions file
 
 # Constants
 SAMPLE_RATE  = 15000 
-N_MFCC       = 13
+N_MFCC       = 20
 FRAME_SMP    = 4096
 HOP_SMP      = 1024
 SILENCE_THRESHOLD_DB = 40
@@ -54,8 +54,8 @@ def compute_mean_variance(features):
     """Compute mean and variance of the features."""
     mean = np.mean(features, axis=1)
     variance = np.var(features, axis=1)
-    agg = np.vstack((mean, variance))
-    return mean, variance
+    agg = np.hstack((mean, variance))
+    return agg
 
 def extract_features(
         audio, sr= 5000,
