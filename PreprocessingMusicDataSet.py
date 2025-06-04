@@ -55,7 +55,7 @@ def compute_mean_variance(features):
     mean = np.mean(features, axis=1)
     variance = np.var(features, axis=1)
     agg = np.vstack((mean, variance))
-    return mean, variance
+    return agg
 
 def extract_features(
         audio, sr= 5000,
@@ -98,7 +98,7 @@ def extract_features(
 
     # 9) dynamic tempo
     oenv = librosa.onset.onset_strength(y=audio, sr=sr, hop_length=hop_smp, aggregate= np.median)
-    tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
+    tempo = librosa.feature.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
 
     features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
 
@@ -144,8 +144,8 @@ def save_features(dataset_path, json_path):
                 print(f"File {file_path} is empty, skipping.")
                 continue
 
-            # Compute MFCC: shape = (n_mfcc, n_frames)
-            mfcc_frames = extract_features(audio=signal,
+            # Compute Features: shape = (n_mfcc, n_frames)
+            feature_frames = extract_features(audio=signal,
                                        sr=SAMPLE_RATE,
                                        n_mfcc=N_MFCC,
                                        frame_smp=FRAME_SMP,
@@ -157,23 +157,23 @@ def save_features(dataset_path, json_path):
                                        cmvn=False)
 
             # Reshape MFCC: shape = (n_frames, n_mfcc)
-            mfcc_frames = mfcc_frames.T
+            feature_frames = feature_frames.T
             
             if USE_DB:
                 records = []
-                for i in range(mfcc_frames.shape[0]):
-                    mfcc_values = mfcc_frames[i].tolist()
+                for i in range(feature_frames.shape[0]):
+                    mfcc_values = feature_frames[i].tolist()
                     records.append((
                     fname,                   # song_name
                     genre,                   # song_genre
                     DUMMY_CLASSIFICATION,    # classification
                     mfcc_values              # list of 13 floats
                 ))
-                DB.insert_in_DB(records)
+                DB.insert_features_V2(records)
                 print(f"Inserted {len(records)} frames for {fname}.")    
             else:
-                data[genre][fname] = {"frames": mfcc_frames.tolist()}
-            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
+                data[genre][fname] = {"frames": feature_frames.tolist()}
+            print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
             
         print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
     if not USE_DB:
