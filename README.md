@@ -8,7 +8,7 @@ As a **HUGE** fan of the prog-metal band TOOL from LA, one day I decided to chec
 >... The music of Primus has been described as "thrash-funk meets Don Knotts, Jr." and "the Freak Brothers set to music". The Daily Freeman described the band's style as "a blend of funk metal and experimental rock". The A.V. Club described the band's music as "absurdist funk-rock". Primus have also been described as "prog rock" or "prog metal". AllMusic places Primus within the first wave of alternative metal bands, saying that they fused heavy metal music with progressive rock. Entertainment Weekly classified the band's performance as "prog-rock self-indulgence"...   
 
 
-For context, some of my favorite artists include Iron Maiden, TOOL, Bruce Dickinson, Pink Floyd, Radiohead, Red Hot Chili Peppers, Deftones, Porcupine Tree, Nine Inch Nails, Deep Purple, Metallica, Rush, and others.   
+For context, some of my favorite artists include Iron Maiden, TOOL, Bruce Dickinson, Pink Floyd, Swans, Radiohead, Red Hot Chili Peppers, Deftones, Porcupine Tree, Opeth, Deafheaven, Nine Inch Nails, Deep Purple, Metallica, Rush, Korn, Van Halen, Kraftwerk and others.   
 
 Recently, I started learning the basics of machine learning and wanted to apply my new knowledge to a field I’m passionate about.
 
@@ -80,7 +80,7 @@ The Confusion Matrix as for 28.05.2025 (no Primus):
 >            weighted avg       0.50      0.50      0.50   2543637
 >
 
-The next step would be to improve the nu-metal and alternative-metal algorithms, as well as to adjust the duration of each subset.
+The next step would be to improve the nu-metal and alternative-metal datasets, as well as to adjust the duration of each subset.
 
 #### 01.06.2025
 By this time, I have tested the algorithm with a more diverse dataset containing 10 genres. The results were acceptable, with especially good performance on classical, metal, jazz, and pop music. Therefore, I can say that the algorithm works well, and the current main issue is likely feature engineering.   
@@ -119,3 +119,17 @@ Visualization of the external dataset:
 As already mentioned, the biggest challenge at this stage is feature engineering. After completing the binary classification on the project dataset, the feature list should be expanded with new parameters (e.g. additional MFCCs, Zero-Crossing Rate, Band Energy Ratio, etc.).   
 I have already tried adding the first and second derivatives to the feature table of the external dataset (resulting in 39 features total), but this actually worsened the results:    
 ![Plot](/stats/20250602__deltasperformance.png)  
+
+
+#### 04.06.2025
+I have just got the following results of my binary classification task (Primus vs. Not Primus):
+![Plot](/stats/20250604_binaryclassification.png)     
+    
+The highest precision was achieved with k = 10, reaching 91.46%.   
+![Plot](/stats/20250604_binaryclassificationprecision.png)   
+
+Based on these results, the following conclusions may be made:    
+  1. The classifier is very good at identifying Non-Primus material.
+  2. It struggles to recognize primus correctly.
+
+In other words, the model has very high specificity but a low sensitivity for Primus.
