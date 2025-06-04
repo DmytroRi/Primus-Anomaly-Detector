@@ -156,37 +156,23 @@ def save_features(dataset_path, json_path):
                                        with_delta_delta=False,
                                        cmvn=False)
             
-            feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
+            #feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
             
-            if USE_DB:
-                records = []
-                for i in range(feature_frames.shape[0]):
-                    feature_values = feature_frames[i].tolist()
-                    records.append((
-                    fname,                   # song_name
-                    genre,                   # song_genre
-                    DUMMY_CLASSIFICATION,    # classification
-                    feature_values           # list of features
+            records = []
+            for i in range(feature_frames.shape[0]):
+                feature_values = feature_frames[i].tolist()
+                records.append((
+                fname,                   # song_name
+                genre,                   # song_genre
+                DUMMY_CLASSIFICATION,    # classification
+                feature_values           # list of features
                 ))
-                DB.insert_features_V2(records)
-                print(f"Inserted {len(records)} frames for {fname}.")    
-            else:
-                data[genre][fname] = {"frames": feature_frames.tolist()}
+            DB.insert_features_V2(records)
+            print(f"Inserted {len(records)} frames for {fname}.")    
             print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
-            
-        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
-    if not USE_DB:
-        # Write the restructured data into the JSON file
-        print(f"Writing data to {json_path}...\n")
-        with open(json_path, "w") as fp:
-            json.dump(data, fp, indent=2)
-    print("The end of the execution.\n")
 
-    # Information about execution 
-    # print("-------------------------------------------")
-    # print(f"Total duration of tracks: {total_duration} seconds.\nTotal amount of segments: {num_of_segments}.\nSegments duration: {segment_duration} seconds.")
-    # print(f"Total effective duration: {segment_duration*num_of_segments} seconds.\nRetention rate: {100*segment_duration*num_of_segments/total_duration}%.")
-    # print("-------------------------------------------")
+        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
+
 
 if __name__ == "__main__":
     save_features(DATASET_PATH, JSON_PATH)
