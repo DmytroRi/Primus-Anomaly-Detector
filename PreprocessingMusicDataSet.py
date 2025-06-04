@@ -52,9 +52,9 @@ def trim_silence_edges(signal):
 
 def compute_mean_variance(features):
     """Compute mean and variance of the features."""
-    mean = np.mean(features, axis=1)
-    variance = np.var(features, axis=1)
-    agg = np.hstack((mean, variance))
+    mean = np.mean(features, axis=1)        # shape: (n_feat_total,)
+    variance = np.var(features, axis=1)     # shape: (n_feat_total,)
+    agg = np.hstack((mean, variance))       # shape: (n_feat_total*2,)
     return agg
 
 def extract_features(
@@ -103,7 +103,7 @@ def extract_features(
     features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
 
     # 10) mean and variance
-    features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
+    #features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
 
     return features  
 
@@ -145,7 +145,7 @@ def save_features(dataset_path, json_path):
                 continue
 
             # Compute MFCC: shape = (n_mfcc, n_frames)
-            mfcc_frames = extract_features(audio=signal,
+            feature_frames = extract_features(audio=signal,
                                        sr=SAMPLE_RATE,
                                        n_mfcc=N_MFCC,
                                        frame_smp=FRAME_SMP,
@@ -155,25 +155,24 @@ def save_features(dataset_path, json_path):
                                        with_delta=False,
                                        with_delta_delta=False,
                                        cmvn=False)
-
-            # Reshape MFCC: shape = (n_frames, n_mfcc)
-            mfcc_frames = mfcc_frames.T
+            
+            feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
             
             if USE_DB:
                 records = []
-                for i in range(mfcc_frames.shape[0]):
-                    mfcc_values = mfcc_frames[i].tolist()
+                for i in range(feature_frames.shape[0]):
+                    feature_values = feature_frames[i].tolist()
                     records.append((
                     fname,                   # song_name
                     genre,                   # song_genre
                     DUMMY_CLASSIFICATION,    # classification
-                    mfcc_values              # list of 13 floats
+                    feature_values           # list of features
                 ))
-                DB.insert_in_DB(records)
+                DB.insert_features_V2(records)
                 print(f"Inserted {len(records)} frames for {fname}.")    
             else:
-                data[genre][fname] = {"frames": mfcc_frames.tolist()}
-            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
+                data[genre][fname] = {"frames": feature_frames.tolist()}
+            print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
             
         print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
     if not USE_DB:

@@ -422,7 +422,7 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
     params = []
     for song_name, song_genre, classification, features in records:
         if len(features) != 52:
-            raise ValueError("Each features size must have 13 floats.")
+            raise ValueError("Each features size must have 52 floats.")
         # flatten into one tuple of length 55
         params.append((song_name, song_genre, classification, *features))
     
