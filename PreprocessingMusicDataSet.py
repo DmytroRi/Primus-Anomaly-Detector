@@ -13,10 +13,10 @@ USE_DB       = True
 EXCEPTIONS_PATH = "data_set/Exceptions.txt"  # Path to the exceptions file
 
 # Constants
-SAMPLE_RATE  = 22050 
-N_MFCC       = 13
-FRAME_MS     = 20
-HOP_MS       = 10
+SAMPLE_RATE  = 15000 
+N_MFCC       = 20
+FRAME_SMP    = 4096
+HOP_SMP      = 1024
 SILENCE_THRESHOLD_DB = 40
 DUMMY_CLASSIFICATION = 8
 
@@ -50,64 +50,68 @@ def trim_silence_edges(signal):
 
     return signal_trimmed
 
-def extract_mfcc(
+def compute_mean_variance(features):
+    """Compute mean and variance of the features."""
+    mean = np.mean(features, axis=1)        # shape: (n_feat_total,)
+    variance = np.var(features, axis=1)     # shape: (n_feat_total,)
+    agg = np.hstack((mean, variance))       # shape: (n_feat_total*2,)
+    return agg
+
+def extract_features(
         audio, sr= 5000,
-        n_mfcc=13, n_mels=40, 
-        frame_ms=20, hop_ms=10,
+        n_mfcc=20, n_mels=40, 
+        frame_smp=20, hop_smp=10,
         pre_emphasis=0.97, lifter=22,
         with_delta=True, with_delta_delta=True,
         cmvn=True):
-    
+    """Extract MFCC features from a raw audio signal, using sample based framing."""
     # 1) pre-emphasis
     audio = np.append(audio[0], audio[1:] - pre_emphasis * audio[:-1])
 
-    # 2) frame & window via n_fft & hop_length
-    n_fft      = int(sr * frame_ms/1000)
-    hop_length = int(sr * hop_ms/1000)
-
-    # 3) mel spectrogram
+    # 2) mel spectrogram
     S = librosa.feature.melspectrogram(
         y=audio, sr=sr,
-        n_fft=n_fft, hop_length=hop_length,
+        n_fft=frame_smp, hop_length=hop_smp,
         n_mels=n_mels, window='hann'
     )
 
-    # 4) log + DCT → MFCC
+    # 3) log + DCT → MFCC
     mfcc = librosa.feature.mfcc(
         S=librosa.power_to_db(S),
         n_mfcc=n_mfcc
     )
 
-    # 5a) liftering
-    n_frames = mfcc.shape[1]
-    n = np.arange(n_mfcc)
-    lift = 1 + (lifter / 2) * np.sin(np.pi * n / lifter)
-    mfcc *= lift[:, np.newaxis]
+    # 4) spectral descriptors
+    cent = librosa.feature.spectral_centroid(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp)
 
-    # 5b) deltas
-    if with_delta:
-        d1 = librosa.feature.delta(mfcc, order=1)
-        d2 = librosa.feature.delta(mfcc, order=2)
-        mfcc = np.vstack([mfcc, d1])
-        if with_delta_delta:
-            mfcc = np.vstack([mfcc, d2])
+    # 5) spectral bandwidth
+    bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp)
 
-    # 5c) CMVN
-    if cmvn:
-        mfcc = (mfcc - mfcc.mean(axis=1, keepdims=True)) \
-               / (mfcc.std(axis=1, keepdims=True) + 1e-8)
+    # 6) spectal roll-off
+    roll = librosa.feature.spectral_rolloff(y=audio, sr=sr, n_fft=frame_smp, hop_length=hop_smp, roll_percent=0.85)
 
-    return mfcc  
+    # 7) root mean square energy
+    rmse = librosa.feature.rms(y=audio, frame_length=frame_smp, hop_length=hop_smp, center=True)
+
+    # 8) zero crossing rate
+    zcr = librosa.feature.zero_crossing_rate(y=audio, frame_length=frame_smp, hop_length=hop_smp, center=True)
+
+    # 9) dynamic tempo
+    oenv = librosa.onset.onset_strength(y=audio, sr=sr, hop_length=hop_smp, aggregate= np.median)
+    tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
+
+    features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
+
+    # 10) mean and variance
+    #features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
+
+    return features  
 
 def save_features(dataset_path, json_path):
     print("Execution of save_mfcc function has started.")
 
     exceptions = read_exceptions()
     data = {}
-
-     # precompute sample counts
-    frame_length = int(SAMPLE_RATE * FRAME_MS / 1000)
-    hop_length   = int(SAMPLE_RATE * HOP_MS   / 1000)
 
     for dirpath, _, filenames in os.walk(dataset_path):
         if dirpath == dataset_path:
@@ -133,7 +137,7 @@ def save_features(dataset_path, json_path):
             signal = trim_silence_edges(signal)
 
             lenght_seconds += librosa.get_duration(y=signal, sr=sr)
-            length_frames += math.ceil(len(signal) / hop_length)
+            length_frames += math.ceil(len(signal) / HOP_SMP)
 
             # Check if the signal is empty after trimming
             if signal.size == 0:
@@ -141,35 +145,34 @@ def save_features(dataset_path, json_path):
                 continue
 
             # Compute MFCC: shape = (n_mfcc, n_frames)
-            mfcc_frames = extract_mfcc(audio=signal,
+            feature_frames = extract_features(audio=signal,
                                        sr=SAMPLE_RATE,
                                        n_mfcc=N_MFCC,
-                                       frame_ms=FRAME_MS,
-                                       hop_ms=HOP_MS,
+                                       frame_smp=FRAME_SMP,
+                                       hop_smp=HOP_SMP,
                                        pre_emphasis=0.97,
                                        lifter=22,
                                        with_delta=False,
                                        with_delta_delta=False,
                                        cmvn=False)
-
-            # Reshape MFCC: shape = (n_frames, n_mfcc)
-            mfcc_frames = mfcc_frames.T
+            
+            feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
             
             if USE_DB:
                 records = []
-                for i in range(mfcc_frames.shape[0]):
-                    mfcc_values = mfcc_frames[i].tolist()
+                for i in range(feature_frames.shape[0]):
+                    feature_values = feature_frames[i].tolist()
                     records.append((
                     fname,                   # song_name
                     genre,                   # song_genre
                     DUMMY_CLASSIFICATION,    # classification
-                    mfcc_values              # list of 13 floats
+                    feature_values           # list of features
                 ))
-                DB.insert_in_DB(records)
+                DB.insert_features_V2(records)
                 print(f"Inserted {len(records)} frames for {fname}.")    
             else:
-                data[genre][fname] = {"frames": mfcc_frames.tolist()}
-            print(f"Processed {fname} with {mfcc_frames.shape[0]} frames and {mfcc_frames.shape[1]} Features.")
+                data[genre][fname] = {"frames": feature_frames.tolist()}
+            print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
             
         print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
     if not USE_DB:

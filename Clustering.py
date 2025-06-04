@@ -48,6 +48,13 @@ def combine_frames(rows, duration_ms, hop_ms):
 
     return features, genres
 
+def zscore(features):
+    """Applies z-score normalization to the features."""
+    print("Applying z-score normalization to features...")
+    mean = np.mean(features, axis=0, keepdims=True)
+    std  = np.std(features, axis=0, keepdims=True)
+    return (features - mean) / std
+
 def visualize_embedding(rows, method='pca'):
     """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
     
@@ -96,6 +103,8 @@ def split_data():
 
     le = LabelEncoder()
     y  = le.fit_transform(raw_genres)
+
+    features = zscore(features)
 
     X_train, X_test, y_train, y_test, \
     names_train, names_test, genres_train, genres_test = train_test_split(
