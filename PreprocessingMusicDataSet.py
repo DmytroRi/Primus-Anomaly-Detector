@@ -50,6 +50,13 @@ def trim_silence_edges(signal):
 
     return signal_trimmed
 
+def compute_mean_variance(features):
+    """Compute mean and variance of the features."""
+    mean = np.mean(features, axis=1)
+    variance = np.var(features, axis=1)
+    agg = np.vstack((mean, variance))
+    return mean, variance
+
 def extract_features(
         audio, sr= 5000,
         n_mfcc=20, n_mels=40, 
@@ -94,6 +101,9 @@ def extract_features(
     tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length=hop_smp, aggregate=None).reshape(1, -1) # shape: (1, n_frames)
 
     features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
+
+    # 10) mean and variance
+    features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
 
     return features  
 
