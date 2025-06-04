@@ -15,7 +15,9 @@ WORKING_TABLE0          = "fr20h10_nodelta"                          # 20ms fram
 WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms frame, 10ms hop, no delta features, no CMVN, no primus
 ###########################################################
 ## Table versions 2
-FT_TABLE_F4096_H1024    = "f4096h1024"                              # 4096 samples frame, 1024 samples hop
+FT_TABLE_F4096_H1024         = "f4096h1024"                              # 4096 samples frame, 1024 samples hop
+FT_TABLE_F4096_H1024_LONG    = "f4096h1024_long"                         # 4096 samples frame, 1024 samples hop, computation over frames
+
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
@@ -433,8 +435,8 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
     ]
 
     for i in range(20):
-        columns.append(f"MFCC{i}_mean REAL")
-        columns.append(f"MFCC{i}_var  REAL")
+        columns.append(f"MFCC{i}_mean")
+        columns.append(f"MFCC{i}_var")
 
     extras = [
         "SPECTRAL_CENTROID",
@@ -457,7 +459,7 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
     try:
         cur = conn.cursor()
         cur.execute("BEGIN")
-        cur.executemany(columns, params)
+        cur.executemany(sql, params)
         conn.commit()
         print(f"Inserted {len(params)} rows in one transaction")
     except sqlite3.Error as e:
@@ -465,3 +467,42 @@ def insert_features_V2(records: Sequence[Tuple[str, str, int, List[float]]]):
         print(f"SQLite error during bulk insert: {e}")
     finally:
         conn.close()
+
+def upload_data_from_db_V2():
+    """
+    Uploads data from the specified table in the database.
+    """
+    print(f"Uploading data from table {FT_TABLE_F4096_H1024}...")
+
+    columns = [
+        "SONG_NAME",
+        "SONG_GENRE",
+        "CLASSIFICATION",
+    ]
+
+    for i in range(20):
+        columns.append(f"MFCC{i}_mean")
+        columns.append(f"MFCC{i}_var")
+
+    extras = [
+        "SPECTRAL_CENTROID",
+        "SPECTRAL_BANDWIDTH",
+        "SPECTRAL_ROLLOFF",
+        "RMSE",
+        "ZCR",
+        "TEMPO"
+    ]
+    for feat in extras:
+        columns.append(f"{feat}_mean")
+        columns.append(f"{feat}_var")
+
+    #placeholders = ",".join(["?"] * len(columns))
+    columns = ",".join(columns)
+
+    conn = sqlite3.connect(DB_PATH)
+    cur  = conn.cursor()
+    cur.execute(f"SELECT {columns} FROM {FT_TABLE_F4096_H1024};")
+    rows = cur.fetchall()
+    conn.close()
+    print(f"Uploaded {len(rows)} rows from {WORKING_TABLE0}.")
+    return rows
