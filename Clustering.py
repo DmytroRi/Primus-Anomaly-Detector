@@ -96,7 +96,7 @@ def visualize_embedding_v2(features, genres, method='tsne'):
     if method == 'pca':
         emb = PCA(n_components=2).fit_transform(features)
     elif method == 'tsne':
-        emb = TSNE(n_components=2, perplexity=30, n_iter=1000).fit_transform(features)
+        emb = TSNE(n_components=2, perplexity=30, max_iter=1000).fit_transform(features)
     else:
         raise ValueError("method must be 'pca' or 'tsne'")
 
