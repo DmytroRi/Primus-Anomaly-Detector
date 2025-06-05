@@ -155,4 +155,34 @@ def binary_classification():
     plt.show()
     pass
 
-binary_classification()
+def Multiclass_vs_Binary_v2():
+    k_values = list(range(1, 31))
+    precision_multiclass= [0.5556, 0.5556, 0.5926, 0.5679, 0.5432, 0.5802, 0.5556, 0.5309, 0.4938, 0.5185,
+                         0.5062, 0.4938, 0.5309, 0.5185, 0.5062, 0.4938, 0.5062, 0.5185, 0.5185, 0.4815,
+                         0.5062, 0.5185, 0.5556, 0.5185, 0.5062, 0.5185, 0.4938, 0.5185, 0.4938, 0.5185]
+
+    precision_binary = [0.8642, 0.8765, 0.9630, 0.9506, 0.9012, 0.9136, 0.8889, 0.9136, 0.9259, 0.9136,
+                        0.9012, 0.9136, 0.9259, 0.9012, 0.9136, 0.9259, 0.9259, 0.9136, 0.9259, 0.9136,
+                        0.9136, 0.9259, 0.9136, 0.9012, 0.9136, 0.9136, 0.9136, 0.9136, 0.9136, 0.9136]
+
+    # Find max
+    max_prec = max(precision_binary)
+    max_k = k_values[precision_binary.index(max_prec)]
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_values, precision_multiclass, label='Precision (multiclass)')
+    plt.plot(k_values, precision_binary, label='Precision (binary)')
+    plt.plot(max_k, max_prec, 'ro', label=f'Max Precision: {max_prec:.4f} at k={max_k}')
+    plt.axhline(y=max_prec, color='r', linestyle='--', label='Max Precision Line')
+    plt.title('Precision multiclass vs. binary classification')
+    plt.xlabel('k (Number of Neighbors)')
+    plt.ylabel('Precision')
+    plt.xticks(k_values, rotation=45)
+    plt.legend()
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+    pass
+
+Multiclass_vs_Binary_v2()
