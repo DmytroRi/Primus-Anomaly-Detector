@@ -185,4 +185,30 @@ def Multiclass_vs_Binary_v2():
     plt.show()
     pass
 
-Multiclass_vs_Binary_v2()
+def external_v2():
+    # Data
+    k_values = list(range(1, 31))
+    precision = [0.6650, 0.6750, 0.6750, 0.6350, 0.6650, 0.6450, 0.6400, 0.6050, 0.6050, 0.5850,
+                 0.5600, 0.5750, 0.5800, 0.5850, 0.5900, 0.5850, 0.5750, 0.5750, 0.5900, 0.5850,
+                 0.5750, 0.5650, 0.5650, 0.5600, 0.5700, 0.5650, 0.5600, 0.5650, 0.5700, 0.5700]
+    
+     # Find max
+    max_prec = max(precision)
+    max_k = k_values[precision.index(max_prec)]
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_values, precision, label='Precision')
+    plt.plot(max_k, max_prec, 'ro', label=f'Max Precision: {max_prec:.4f} at k={max_k}')
+    plt.axhline(y=max_prec, color='r', linestyle='--', label='Max Precision Line')
+    plt.title('k-Nearest Neighbors Precision vs. k (external dataset)')
+    plt.xlabel('k (Number of Neighbors)')
+    plt.ylabel('Precision')
+    plt.xticks(k_values, rotation=45)
+    plt.legend()
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+    pass
+
+external_v2()
