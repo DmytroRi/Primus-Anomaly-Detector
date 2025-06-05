@@ -19,7 +19,7 @@ METRIC = 'euclidean'    # 'angular', 'euclidean', 'manhattan', 'hamming', 'dot'
 TESTING_RATIO = 0.2
 NEIGHBOURS = 5
 
-BINARY_CLASSIFICATION = True  # If True, use binary classification (primus or not primus) instead of multi-genre classification
+BINARY_CLASSIFICATION = False  # If True, use binary classification (primus or not primus) instead of multi-genre classification
 
 def combine_frames(rows, duration_ms, hop_ms):
     """Groups tiny frames into larger segments and computes mean+std features."""
@@ -47,6 +47,13 @@ def combine_frames(rows, duration_ms, hop_ms):
     genres  = genre_list
 
     return features, genres
+
+def zscore(features):
+    """Applies z-score normalization to the features."""
+    print("Applying z-score normalization to features...")
+    mean = np.mean(features, axis=0, keepdims=True)
+    std  = np.std(features, axis=0, keepdims=True)
+    return (features - mean) / std
 
 def visualize_embedding(rows, method='pca'):
     """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
@@ -82,7 +89,7 @@ def visualize_embedding(rows, method='pca'):
 
 def split_data():
     """Loads rows from DB, extracts features & labels, splits, and scales."""
-    rows = DB.upload_data_from_db()
+    rows = DB.upload_data_from_db_V2()
     # rows: (song_name, song_genre, dummy_class, mfcc0…mfcc12)
 
     if BINARY_CLASSIFICATION:
@@ -96,6 +103,8 @@ def split_data():
 
     le = LabelEncoder()
     y  = le.fit_transform(raw_genres)
+
+    features = zscore(features)
 
     X_train, X_test, y_train, y_test, \
     names_train, names_test, genres_train, genres_test = train_test_split(
