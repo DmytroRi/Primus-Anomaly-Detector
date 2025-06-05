@@ -103,7 +103,7 @@ def extract_features(
     features = np.vstack([mfcc, cent, bandwidth, roll, rmse, zcr, tempo]) # features.shape = (n_feat_total, n_frames)
 
     # 10) mean and variance
-    #features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
+    features = compute_mean_variance(features) # features.shape = (n_feat_total*2, n_frames)
 
     return features  
 
@@ -159,6 +159,11 @@ def save_features(dataset_path, json_path):
             #feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
             
             records = []
+            records.append((fname,
+                            genre,                   # song_genre
+                            DUMMY_CLASSIFICATION,    # classification
+                            feature_frames.tolist()))
+            """
             for i in range(feature_frames.shape[0]):
                 feature_values = feature_frames[i].tolist()
                 records.append((
@@ -167,9 +172,10 @@ def save_features(dataset_path, json_path):
                 DUMMY_CLASSIFICATION,    # classification
                 feature_values           # list of features
                 ))
+                """
             DB.insert_features_V2(records)
             print(f"Inserted {len(records)} frames for {fname}.")    
-            print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
+            #print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
 
         print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
 
