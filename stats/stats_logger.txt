@@ -119,8 +119,8 @@ weighted avg       0.91      0.91      0.90   2893426
 
 -------------------------------------------------------------------------------------
 Description: 		Precision on the second version of dataset using 52 features
-Frame:				20ms
-Hop:				10ms
+Frame:				4096smp
+Hop:				1024smp
 K-Range:			1..70
 Amount of Trees:	20
 Best K:				3
@@ -140,4 +140,25 @@ classic_heavy_metal       0.50      0.50      0.50        10
            accuracy                           0.59        81
           macro avg       0.61      0.58      0.58        81
        weighted avg       0.60      0.59      0.59        81
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version dataset using 52 features
+					(binary classificaion)
+Frame:				4096smp
+Hop:				1024smp
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				3
+Best Presicion: 	96,30%
+Recall:				96%
+F1-score:			0.96
+              precision    recall  f1-score   support
+
+  non-primus       0.99      0.97      0.98   	69
+      primus       0.85      0.92      0.88    	12
+
+    accuracy                           0.96   	81
+   macro avg       0.92      0.94      0.93   	81
+weighted avg       0.96      0.96      0.96     81
 -------------------------------------------------------------------------------------
