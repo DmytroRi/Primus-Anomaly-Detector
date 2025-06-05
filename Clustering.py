@@ -55,7 +55,7 @@ def zscore(features):
     std  = np.std(features, axis=0, keepdims=True)
     return (features - mean) / std
 
-def visualize_embedding(rows, method='pca'):
+def visualize_embedding(rows, method='tsne'):
     """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
     
     features, genres = combine_frames(rows, duration_ms=30000, hop_ms=30000)
@@ -87,6 +87,36 @@ def visualize_embedding(rows, method='pca'):
     plt.tight_layout()
     plt.show()
 
+def visualize_embedding_v2(features, genres, method='tsne'):
+    """Visulalizes 2D embedding of MFCC features using PCA or t-SNE."""
+
+    le = LabelEncoder().fit(genres)
+    y  = le.transform(genres)
+
+    if method == 'pca':
+        emb = PCA(n_components=2).fit_transform(features)
+    elif method == 'tsne':
+        emb = TSNE(n_components=2, perplexity=30, n_iter=1000).fit_transform(features)
+    else:
+        raise ValueError("method must be 'pca' or 'tsne'")
+
+    pfig, ax = plt.subplots(figsize=(8, 6))
+    scatter = ax.scatter(emb[:, 0], emb[:, 1], c=y, cmap='tab10', s=20, alpha=0.7)
+    handles, _ = scatter.legend_elements()
+    genre_labels = list(le.classes_)
+    ax.legend(
+        handles=list(handles),
+        labels=genre_labels,
+        title="Genre",
+        bbox_to_anchor=(1, 1),
+        loc="upper left"
+    )
+    plt.title(f"{method.upper()} projection of features")
+    plt.xlabel("Dim 1")
+    plt.ylabel("Dim 2")
+    plt.tight_layout()
+    plt.show()
+
 def split_data():
     """Loads rows from DB, extracts features & labels, splits, and scales."""
     rows = DB.upload_data_from_db_V2()
@@ -105,6 +135,8 @@ def split_data():
     y  = le.fit_transform(raw_genres)
 
     features = zscore(features)
+    
+    visualize_embedding_v2(features, raw_genres)
 
     X_train, X_test, y_train, y_test, \
     names_train, names_test, genres_train, genres_test = train_test_split(
