@@ -8,7 +8,7 @@ As a **HUGE** fan of the prog-metal band TOOL from LA, one day I decided to chec
 >... The music of Primus has been described as "thrash-funk meets Don Knotts, Jr." and "the Freak Brothers set to music". The Daily Freeman described the band's style as "a blend of funk metal and experimental rock". The A.V. Club described the band's music as "absurdist funk-rock". Primus have also been described as "prog rock" or "prog metal". AllMusic places Primus within the first wave of alternative metal bands, saying that they fused heavy metal music with progressive rock. Entertainment Weekly classified the band's performance as "prog-rock self-indulgence"...   
 
 
-For context, some of my favorite artists include Iron Maiden, TOOL, Bruce Dickinson, Pink Floyd, Swans, Radiohead, Red Hot Chili Peppers, Deftones, Porcupine Tree, Opeth, Deafheaven, Nine Inch Nails, Deep Purple, Metallica, Rush, Korn, Van Halen, Kraftwerk and others.   
+For context, some of my favorite artists include Iron Maiden, TOOL, Bruce Dickinson, Pink Floyd, Swans, Radiohead, Red Hot Chili Peppers, Deftones, Porcupine Tree, Opeth, Deafheaven, Nine Inch Nails, Deep Purple, Metallica, Rush, Korn, Van Halen, Kraftwerk and others. You can check my [account on RYM](https://rateyourmusic.com/~HopelessExistentialist).  
 
 Recently, I started learning the basics of machine learning and wanted to apply my new knowledge to a field I’m passionate about.
 
@@ -130,6 +130,58 @@ The highest precision was achieved with k = 10, reaching 91.46%.
 
 Based on these results, the following conclusions may be made:    
   1. The classifier is very good at identifying Non-Primus material.
-  2. It struggles to recognize primus correctly.
+  2. It struggles to recognize Primus correctly.
 
 In other words, the model has very high specificity but a low sensitivity for Primus.
+      
+#### 05.06.2025
+There are now some classification results based on my new datasets but first, a quick summary of the changes:
+- The number of features was increased by 52, with only one feature set per song.
+- New features include means and variances computed across: 20 MFCCs, sprectral centroid, spectral bandwidth, specral roll-off, root mean squaree energy, zero crossing rate and dynamic tempo.
+- The framing strategy is now sample-based rather than duration-based.
+- The sampling rate was manually reduced to 15 kHz.
+- All feature values are z-scored before classification.
+
+The reduced feature table size now allows for better dataset visualization:    
+![Plot](/stats/20250605_datasetplot.png)    
+    
+While clear-cut clusters are still difficult to identify, we can observe some intuitive groupings — e.g. black metal and death metal are neighbors as are classic heavy metal and hard rock. Interestingly, Primus appears somewhat isolated, though with overlaps with other genres. This becomes even more apparent in a binary visualization:    
+![Plot](/stats/20250605_datasetbinaryplot.png)    
+     
+Classification Results:   
+- Multiclass classification precision: 59.26%
+- Binary classification precision: 96.30%
+- Best performance in both cases was achieved with k = 3   
+![Plot](/stats/20250605_precision_v2.png)
+
+Confusion Matrices for both classification tasks:    
+![Plot](/stats/20250605cm_v2.png)    
+     
+![Plot](/stats/20250605_binaryclassification_v2.png)    
+
+Interpretation of Results:
+1. Binary experiment
+    - High hit-rate — ~92% of Primus tracks are correctly identified.
+    - Clean background — ~3 % of non-Primus tracks are mistakenly tagged as Primus.
+    - F-score is ca. 93% — a solid, operational Primus detector.
+  
+2. Muliclass experiment
+    - Recall is ca. 92% — the algorithm rarely misses Primus.
+    - Frequent false positives are:   
+           - Alt-metal (14%)   
+           - Hard-rock (9%)   
+   - Other genre predictions remain weak.
+  
+Practical conclusions:
+1. Yes/No-Primus filter   
+   Performs very well and is reliable for most use cases.
+2. Multiclass precision   
+   Still limited — likely due to either:
+   - An insufficient number of features
+   - Bad examples from overlapping genres
+
+Next Steps:
+1. Test on the external dataset used in previous experiments.
+2. Rebuild the dataset using an equal number of songs per subgenre and compute mean/variance on a per-song basis.
+3. Reframe songs into segments for feature aggregation — increasing the number of rows and targeting equal-sized genre-specific samples. 
+

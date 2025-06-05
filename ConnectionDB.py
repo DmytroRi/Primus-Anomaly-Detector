@@ -17,7 +17,7 @@ WORKING_TABLE1          = "fr20h10_nodelta_noprimus"                 # 20ms fram
 ## Table versions 2
 FT_TABLE_F4096_H1024         = "f4096h1024"                              # 4096 samples frame, 1024 samples hop
 FT_TABLE_F4096_H1024_LONG    = "f4096h1024_long"                         # 4096 samples frame, 1024 samples hop, computation over frames
-
+FT_TABLE_F4096_H1024_EXTERN  = "f4096h1024_extern"                       # 4096 samples frame, 1024 samples hop, external dataset
 
 def insert_in_DB(
     records: Sequence[Tuple[str, str, int, List[float]]]
