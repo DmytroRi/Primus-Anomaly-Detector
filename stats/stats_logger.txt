@@ -116,3 +116,28 @@ F1-score:			0.90
    macro avg       0.86      0.69      0.74   2893426
 weighted avg       0.91      0.91      0.90   2893426
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version of dataset using 52 features
+Frame:				20ms
+Hop:				10ms
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				3
+Best Presicion: 	59,26%
+Recall:				59%
+F1-score:			0.59
+                     precision    recall  f1-score   support
+
+		  alt_metal       0.53      0.64      0.58        14
+        black_metal       0.83      0.50      0.62        10
+classic_heavy_metal       0.50      0.50      0.50        10
+        death_metal       0.53      0.69      0.60        13
+          hard_rock       0.44      0.36      0.40        11
+             primus       0.79      0.92      0.85        12
+       thrash_metal       0.62      0.45      0.53        11
+
+           accuracy                           0.59        81
+          macro avg       0.61      0.58      0.58        81
+       weighted avg       0.60      0.59      0.59        81
+-------------------------------------------------------------------------------------
