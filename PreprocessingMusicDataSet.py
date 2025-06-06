@@ -52,10 +52,27 @@ def trim_silence_edges(signal):
 
 def compute_mean_variance(features):
     """Compute mean and variance of the features."""
-    mean = np.mean(features, axis=1)        # shape: (n_feat_total,)
-    variance = np.var(features, axis=1)     # shape: (n_feat_total,)
-    agg = np.hstack((mean, variance))       # shape: (n_feat_total*2,)
-    return agg
+    _, n_frames = features.shape
+
+    third = n_frames // 3
+    seg1 = features[:, :third]
+    seg2 = features[:, third:2*third]
+    seg3 = features[:, 2*third:]
+
+    mean = np.mean(seg1, axis=1)    # shape (n_feats,)
+    var  = np.var(seg1, axis=1)     # shape (n_feats,)
+    agg1 = np.hstack((mean, var))   # shape (2 * n_feats,)
+
+    mean = np.mean(seg2, axis=1)    
+    var  = np.var(seg2, axis=1)      
+    agg2 = np.hstack((mean, var))   
+
+    mean = np.mean(seg3, axis=1)
+    var  = np.var(seg3, axis=1)
+    agg3 = np.hstack((mean, var))
+
+    # Concatenate: [agg1, agg2, agg3]
+    return np.hstack((agg1, agg2, agg3))
 
 def extract_features(
         audio, sr= 5000,
