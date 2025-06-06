@@ -241,3 +241,52 @@ Confusion Matrix:
    macro avg       0.93      0.87      0.90        84
 weighted avg       0.95      0.95      0.95        84
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version of dataset with same number
+					of songs per genre using 52 features, computed three times per song
+Frame:				4096smp
+Hop:				1024smp
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				2
+Best Presicion: 	81,75%
+Recall:				82%
+F1-score:			0.82
+                     precision    recall  f1-score   support
+
+		  alt_metal       0.82      0.75      0.78        36
+        black_metal       0.97      0.86      0.91        36
+classic_heavy_metal       0.72      0.72      0.72        36
+        death_metal       1.00      0.92      0.96        36
+          hard_rock       0.68      0.72      0.70        36
+             primus       0.70      0.89      0.78        36
+       thrash_metal       0.91      0.86      0.89        36
+
+           accuracy                           0.82       252
+          macro avg       0.83      0.82      0.82       252
+       weighted avg       0.83      0.82      0.82       252
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version dataset with same number
+					of songs per genre using 52 features, computed three times per song
+					(binary classificaion)
+Frame:				4096smp
+Hop:				1024smp
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				3
+Best Presicion: 	91,67%
+Recall:				92%
+F1-score:			0.92
+Confusion Matrix:
+              precision    recall  f1-score   support
+
+  non-primus       0.96      0.94      0.95       216
+      primus       0.68      0.78      0.73        36
+
+    accuracy                           0.92       252
+   macro avg       0.82      0.86      0.84       252
+weighted avg       0.92      0.92      0.92       252
+-------------------------------------------------------------------------------------
