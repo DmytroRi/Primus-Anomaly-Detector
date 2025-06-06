@@ -153,6 +153,7 @@ Best K:				3
 Best Presicion: 	96,30%
 Recall:				96%
 F1-score:			0.96
+Confusion Matrix:
               precision    recall  f1-score   support
 
   non-primus       0.99      0.97      0.98   	69
@@ -191,4 +192,52 @@ Confusion Matrix:
     accuracy                           0.68       200
    macro avg       0.70      0.68      0.68       200
 weighted avg       0.70      0.68      0.68       200
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version of dataset with same number
+					of songs per genre using 52 features
+Frame:				4096smp
+Hop:				1024smp
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				4
+Best Presicion: 	63,10%
+Recall:				63%
+F1-score:			0.62
+                     precision    recall  f1-score   support
+
+		  alt_metal       0.54      0.58      0.56        12
+        black_metal       1.00      0.33      0.50        12
+classic_heavy_metal       0.67      0.50      0.57        12
+        death_metal       0.69      0.75      0.72        12
+          hard_rock       0.54      0.58      0.56        12
+             primus       0.65      0.92      0.76        12
+       thrash_metal       0.60      0.75      0.67        12
+
+           accuracy                           0.63        84
+          macro avg       0.67      0.63      0.62        84
+       weighted avg       0.67      0.63      0.62        84
+-------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+Description: 		Precision on the second version dataset with same number
+					of songs per genre using 52 features (binary classificaion)
+Frame:				4096smp
+Hop:				1024smp
+K-Range:			1..70
+Amount of Trees:	20
+Best K:				3
+Best Presicion: 	95,24%
+Recall:				95%
+F1-score:			0.95
+Confusion Matrix:
+              precision    recall  f1-score   support
+
+  non-primus       0.96      0.99      0.97        72
+      primus       0.90      0.75      0.82        12
+
+    accuracy                           0.95        84
+   macro avg       0.93      0.87      0.90        84
+weighted avg       0.95      0.95      0.95        84
 -------------------------------------------------------------------------------------
