@@ -72,7 +72,7 @@ def compute_mean_variance(features):
     agg3 = np.hstack((mean, var))
 
     # Concatenate: [agg1, agg2, agg3]
-    return np.hstack((agg1, agg2, agg3))
+    return np.vstack((agg1, agg2, agg3))
 
 def extract_features(
         audio, sr= 5000,
@@ -176,11 +176,10 @@ def save_features(dataset_path, json_path):
             #feature_frames = feature_frames.T  # Transpose to shape (n_frames, n_mfcc)
             
             records = []
-            records.append((fname,
-                            genre,                   # song_genre
-                            DUMMY_CLASSIFICATION,    # classification
-                            feature_frames.tolist()))
-            """
+            #records.append((fname,
+            #                genre,                   # song_genre
+            #                DUMMY_CLASSIFICATION,    # classification
+            #                feature_frames.tolist()))
             for i in range(feature_frames.shape[0]):
                 feature_values = feature_frames[i].tolist()
                 records.append((
@@ -189,7 +188,7 @@ def save_features(dataset_path, json_path):
                 DUMMY_CLASSIFICATION,    # classification
                 feature_values           # list of features
                 ))
-                """
+            
             DB.insert_features_V2(records)
             print(f"Inserted {len(records)} frames for {fname}.")    
             #print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
