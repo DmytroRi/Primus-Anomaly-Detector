@@ -177,7 +177,7 @@ def save_features(dataset_path, json_path):
             print(f"Inserted {len(records)} frames for {fname}.")    
             #print(f"Processed {fname} with {feature_frames.shape[0]} frames and {feature_frames.shape[1]} Features.")
 
-        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filenames))
+        print_genre_info(genre, lenght_seconds, lenght_seconds, len(filtered_filenames))
 
 
 if __name__ == "__main__":
