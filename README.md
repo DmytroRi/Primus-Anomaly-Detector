@@ -159,7 +159,7 @@ Confusion Matrices for both classification tasks:
      
 ![Plot](/stats/20250605_binaryclassification_v2.png)    
 
-Interpretation of Results:
+##### Interpretation of Results:
 1. Binary experiment
     - High hit-rate — ~92% of Primus tracks are correctly identified.
     - Clean background — ~3 % of non-Primus tracks are mistakenly tagged as Primus.
@@ -172,7 +172,7 @@ Interpretation of Results:
            - Hard-rock (9%)   
    - Other genre predictions remain weak.
   
-Practical conclusions:
+##### Practical conclusions:
 1. Yes/No-Primus filter   
    Performs very well and is reliable for most use cases.
 2. Multiclass precision   
@@ -180,8 +180,44 @@ Practical conclusions:
    - An insufficient number of features
    - Bad examples from overlapping genres
 
-Next Steps:
+##### Next Steps:
 1. Test on the external dataset used in previous experiments.
 2. Rebuild the dataset using an equal number of songs per subgenre and compute mean/variance on a per-song basis.
 3. Reframe songs into segments for feature aggregation — increasing the number of rows and targeting equal-sized genre-specific samples. 
+    
+#### 07.06.2025
+This update presents the results from the steps described in the previous chapter. The precision on the external dataset increased from 63.15% to 67.50%. Below are the new confusion matrix and precision plot. Due to the smaller number of items in the new dataset, precision was calculated for k values in range from 1 to 31:   
+Confusion Matrix:    
+![Plot](/stats/20250605cm_externaldatasetv2.png)    
+Precision plot:   
+![Plot](/stats/20250605_precision_externaldatasetv2.png)    
 
+##### Rebalanced Dataset: 60 Songs per Subgenre   
+The dataset was then rebuilt to contain exactly 60 songs per subgenre. Below is a visualization of the updated dataset:   
+![Plot](/stats/20250606_datasetplot_60songspergenre.png)    
+As a result:
+- Multiclass precision increased from 59.26% to 63.10%.    
+- Binary classification precision slightly decreased from 96.30% to 95.24%.   
+![Plot](/stats/20250605_precision_v2_60songspergenre.png)
+    
+Confusion Matrices:    
+Multiclass    
+![Plot](/stats/20250606cm_v2_60songspergenre.png)    
+Binary    
+![Plot](/stats/20250606_binaryclassification_v2_60songspergenre.png)    
+
+##### Final Experiment: 3-Part Segmentation per Song     
+As a closing experiment, each of the 60 songs per genre was divided into three equal-length parts, significantly increasing the dataset size.    
+Results:
+- Multiclass precision improved to 81.75%.   
+- Binary precision dropped to 91.67%.
+     
+Confusion Matrices:   
+Multiclass    
+![Plot](/stats/20250606cm_v2_60songspergenre_3partdivision.png)    
+Binary    
+![Plot](/stats/20250606_binaryclassification_v2_60songspergenre_3partdivision.png)    
+     
+Dataset Visualizations (Three-Part Segmentation):    
+![Plot](/stats/20250606_datasetplot_60songspergenre_3partdivision.png)    
+![Plot](/stats/20250606_datasetplot_60songspergenre_3partdivision_binaryplot.png)    
