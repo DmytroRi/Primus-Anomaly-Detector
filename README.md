@@ -1,4 +1,7 @@
 # Anomaly Detection in the Music Genre of Primus
+## Project Completed   
+This research project is now complete. You can find the final report [here](https://github.com/DmytroRi/Primus-Anomaly-Detector/blob/main/When%20Metal%20Misbehaves%20Classifying%20Primus%20with%20Audio%20ML.pdf).   
+If you're interested in the project roadmap, including motivation, discussions, experiments and results, feel free to explore this README.
 ## Overview
 This project explores the use of machine learning to detect anomalies in the musical style of the band Primus. Inspired by their unconventional sound and unique approach to music, this research aims to analyze their genre and identify elements that make their music stand out from traditional classifications.
 ![Primus](https://i.redd.it/ebll5yxz7teb1.jpg)
